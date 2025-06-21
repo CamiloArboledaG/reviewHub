@@ -12,10 +12,17 @@ const reviewSchema = new mongoose.Schema({
     required: true,
   },
   rating: {
-    type: Number,
-    required: true,
-    min: 0.5,
-    max: 5,
+    value: {
+        type: Number,
+        required: true,
+        min: 0.5,
+        max: 5,
+    },
+    max: {
+        type: Number,
+        required: true,
+        default: 5,
+    }
   },
   content: {
     type: String,

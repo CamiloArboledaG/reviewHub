@@ -29,6 +29,7 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
         } catch (error) {
             console.error(error)
         } finally {
+            await queryClient.resetQueries({ queryKey: ['reviews'] });
             setIsRestored(true);
         }
       }

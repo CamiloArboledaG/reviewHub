@@ -52,28 +52,32 @@ const seedDB = async () => {
     const createdItems = await Item.insertMany(items);
     console.log('Nuevos items insertados.');
 
-    const reviews = [
-        {
-            user: createdUsers[0]._id,
-            item: createdItems[0]._id,
-            rating: { value: 4.5, max: 5 },
-            content: 'Una obra maestra emocional que redefine lo que puede ser un videojuego. La narrativa es profunda y los personajes están increíblemente desarrollados.',
-        },
-        {
-            user: createdUsers[1]._id,
-            item: createdItems[1]._id,
-            rating: { value: 5, max: 5 },
-            content: 'Villeneuve logra adaptar lo imposible. Visualmente espectacular y narrativamente sólida. Una experiencia cinematográfica única.',
-        },
-        {
-            user: createdUsers[2]._id,
-            item: createdItems[2]._id,
-            rating: { value: 4, max: 5 },
-            content: 'Una novela mágica que te atrapa desde la primera página. El realismo mágico en su máxima expresión.',
-        }
-    ];
+    const reviews = [];
+    const contents = [
+      'Una obra maestra emocional que redefine lo que puede ser un videojuego. La narrativa es profunda y los personajes están increíblemente desarrollados.',
+      'Villeneuve logra adaptar lo imposible. Visualmente espectacular y narrativamente sólida. Una experiencia cinematográfica única.',
+      'Una novela mágica que te atrapa desde la primera página. El realismo mágico en su máxima expresión.',
+      'Conceptos de ciencia ficción alucinantes que te harán reflexionar durante días. Lectura obligada.',
+      'El final de temporada me dejó sin palabras. ¡Necesito la siguiente ya!',
+      'Una película conmovedora con actuaciones brillantes. Prepara los pañuelos.',
+    ]
+
+    for (let i = 0; i < 50; i++) {
+      const randomUser = createdUsers[i % createdUsers.length];
+      const randomItem = createdItems[i % createdItems.length];
+      const randomContent = contents[i % contents.length];
+      const randomRating = (Math.random() * 4 + 1).toFixed(1); // Rating entre 1.0 y 5.0
+
+      reviews.push({
+        user: randomUser._id,
+        item: randomItem._id,
+        rating: { value: parseFloat(randomRating), max: 5 },
+        content: `Reseña autogenerada ${i + 1}: ${randomContent}`,
+      });
+    }
+
     await Review.insertMany(reviews);
-    console.log('Nuevas reseñas insertadas.');
+    console.log(`${reviews.length} nuevas reseñas insertadas.`);
 
 
   } catch (error) {

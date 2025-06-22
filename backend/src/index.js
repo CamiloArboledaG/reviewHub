@@ -2,6 +2,7 @@ import express from 'express'
 import mongoose from 'mongoose'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import './models/index.js'; // Importar todos los modelos para registrarlos
 
 dotenv.config()
 const app = express()
@@ -11,7 +12,10 @@ app.use(express.json())
 
 // Importar y usar rutas
 import categoryRoutes from './routes/categories.js';
+import reviewRoutes from './routes/reviews.js';
+
 app.use('/api/categories', categoryRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // TODO: Importar y usar rutas
 

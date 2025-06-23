@@ -1,5 +1,7 @@
 import { Bell, Search } from 'lucide-react';
 import React from 'react';
+import { Button } from './ui/button';
+import Link from 'next/link';
 
 const Header = () => {
   return (
@@ -30,7 +32,9 @@ const Header = () => {
             <button className="p-2 rounded-full hover:bg-accent">
               <Bell className="h-6 w-6 text-foreground" />
             </button>
-            <div className="w-9 h-9 bg-muted rounded-full"></div>
+            <Link href="/login">
+              <Button>Iniciar Sesión</Button>
+            </Link>
           </div>
         </div>
       </div>

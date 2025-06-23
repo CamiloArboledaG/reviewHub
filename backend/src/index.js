@@ -13,9 +13,11 @@ app.use(express.json())
 // Importar y usar rutas
 import categoryRoutes from './routes/categories.js';
 import reviewRoutes from './routes/reviews.js';
+import authRoutes from './routes/auth.js';
 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/auth', authRoutes);
 
 // TODO: Importar y usar rutas
 

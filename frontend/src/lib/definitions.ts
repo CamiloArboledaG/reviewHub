@@ -38,4 +38,17 @@ export type ReviewsPage = {
   totalPages: number;
   totalReviews: number;
   hasNextPage: boolean;
+};
+
+export type LoginCredentials = {
+  username?: string;
+  password?: string;
+  email?: string;
+};
+
+export type RegisterCredentials = {
+  name: string;
+  username: string;
+  email: string;
+  password?: string;
 }; 

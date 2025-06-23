@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import QueryProvider from "@/components/QueryProvider";
+import { ToastProvider } from "@/context/ToastContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,11 +20,11 @@ export default function RootLayout({
     <html lang="es">
       <body className={`${inter.className} bg-background text-foreground`}>
         <QueryProvider>
-          <Header />
-          <Sidebar />
-          <main className="pl-64 pt-16">{children}</main>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </QueryProvider>
       </body>
     </html>
   );
-}
+} 

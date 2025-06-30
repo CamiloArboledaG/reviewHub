@@ -2,13 +2,18 @@ import express from 'express'
 import mongoose from 'mongoose'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import cookieParser from 'cookie-parser'
 import './models/index.js'; // Importar todos los modelos para registrarlos
 
 dotenv.config()
 const app = express()
 
-app.use(cors())
+app.use(cors({
+  origin: 'http://localhost:3000', // Reemplaza con la URL de tu frontend
+  credentials: true
+}));
 app.use(express.json())
+app.use(cookieParser())
 
 // Importar y usar rutas
 import categoryRoutes from './routes/categories.js';

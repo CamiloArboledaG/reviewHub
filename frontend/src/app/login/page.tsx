@@ -1,38 +1,32 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { loginUser } from '@/lib/queries';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/context/ToastContext';
+import { useAuth } from '@/context/AuthContext';
 
 const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const router = useRouter();
+  const { login, loading } = useAuth();
   const { showToast } = useToast();
 
-  const mutation = useMutation({
-    mutationFn: loginUser,
-    onSuccess: (data) => {
-      // TODO: Guardar el token de forma segura
-      console.log('Login exitoso:', data);
-      router.push('/home');
-    },
-    onError: (error) => {
-      showToast(error.message, 'destructive');
-    }
-  });
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate({ username, password });
+    try {
+      await login({ username, password });
+    } catch (error) {
+      if (error instanceof Error) {
+        showToast(error.message, 'destructive');
+      } else {
+        showToast('Ocurrió un error inesperado', 'destructive');
+      }
+    }
   };
 
   return (
@@ -54,8 +48,8 @@ const LoginPage = () => {
                 placeholder="tu_usuario"
                 required
                 value={username}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-                disabled={mutation.isPending}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={loading}
               />
             </div>
             <div className="grid gap-2">
@@ -65,14 +59,14 @@ const LoginPage = () => {
                 type="password" 
                 required 
                 value={password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                disabled={mutation.isPending}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={mutation.isPending}>
-              {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Ingresar
             </Button>
             <div className="mt-4 text-center text-sm">

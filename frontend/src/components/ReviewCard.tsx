@@ -1,11 +1,13 @@
 'use client';
 
 import { Film, Gamepad2, Heart, MessageCircle, MoreHorizontal, Share2, Star, Tv, Book, LucideProps } from 'lucide-react';
+import Image from 'next/image';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Category } from '@/lib/definitions';
 import { fetchCategories } from '@/lib/queries';
 import { ForwardRefExoticComponent, RefAttributes } from 'react';
+import { Button } from './ui/button';
 
 type ReviewCardProps = {
   review: {
@@ -89,7 +91,7 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-muted rounded-full">
-            {/* <img src={user.avatarUrl} alt={user.name} className="rounded-full" /> */}
+            <Image src={user.avatarUrl ? user.avatarUrl : '/avatares/avatar1.svg'} alt={user.name} width={48} height={48} className="rounded-full" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -111,18 +113,18 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
         </div>
         <div className="flex items-center gap-2">
             {isFollowing ? (
-                 <button className="px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-full">
+                 <Button className="px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-full">
                     Siguiendo
-                </button>
+                </Button>
             ) : (
-                <button className="px-4 py-2 text-sm font-semibold text-foreground bg-card border border-border rounded-full hover:bg-accent">
+                <Button className="px-4 py-2 text-sm font-semibold text-foreground bg-card border border-border rounded-full hover:bg-accent">
                     Seguir
-                </button>
+                </Button>
             )}
           
-          <button className="p-2 rounded-full hover:bg-accent">
+          <Button variant="ghost" className="p-2 rounded-full hover:bg-accent">
             <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
-          </button>
+          </Button>
         </div>
       </div>
       <div className="mt-4 flex gap-6">
@@ -141,18 +143,18 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
         </div>
       </div>
       <div className="mt-4 pt-4 border-t border-border flex items-center gap-6 text-muted-foreground">
-        <button className="flex items-center gap-2 hover:text-red-500">
+        <Button variant="ghost-icon" className="gap-2 hover:text-red-500 p-0">
           <Heart className="w-5 h-5" />
           <span>{likes}</span>
-        </button>
-        <button className="flex items-center gap-2 hover:text-blue-500">
+        </Button>
+        <Button variant="ghost-icon" className="gap-2 hover:text-blue-500 p-0">
           <MessageCircle className="w-5 h-5" />
           <span>{comments}</span>
-        </button>
+        </Button>
         <div className="flex-grow"></div>
-        <button className="hover:text-foreground">
+        <Button variant="ghost-icon" className="hover:text-foreground p-0">
           <Share2 className="w-5 h-5" />
-        </button>
+        </Button>
       </div>
     </div>
   );

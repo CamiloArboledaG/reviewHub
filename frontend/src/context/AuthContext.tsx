@@ -21,8 +21,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  console.log('user', user);
-
   // 1. useEffect para la carga inicial de la sesión.
   // Se ejecuta UNA SOLA VEZ al montar el componente.
   useEffect(() => {

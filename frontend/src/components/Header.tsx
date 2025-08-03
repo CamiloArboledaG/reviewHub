@@ -1,10 +1,11 @@
 'use client';
 
-import { Bell, Search } from 'lucide-react';
+import { Bell, LogOut, Search } from 'lucide-react';
 import React from 'react';
 import { Button } from './ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -36,13 +37,19 @@ const Header = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="p-2 rounded-full hover:bg-accent">
-              <Bell className="h-6 w-6 text-foreground" />
-            </button>
             {isAuthenticated ? (
               <>
-                <span className="text-sm font-medium">Hola, {user?.name}</span>
-                <Button variant="outline" onClick={logout}>Cerrar Sesión</Button>
+                  <Button variant="ghost" className="p-2 rounded-full hover:bg-accent">
+                    <Bell className="h-6 w-6 text-foreground" />
+                  </Button>
+                  <Button variant="ghost" className="p-2 rounded-full hover:bg-accent">
+                    <div className="w-6 h-6">
+                      <Image src={user?.avatarUrl ? user?.avatarUrl : '/avatares/avatar1.svg'} alt={user?.name || 'avatar'} width={38} height={38} className="rounded-full" />
+                    </div>
+                  </Button>
+                  <Button variant="ghost" className="p-2 rounded-full hover:bg-accent" onClick={logout}>
+                    <LogOut className="h-6 w-6 text-foreground" />
+                  </Button>
               </>
             ) : (
               <>

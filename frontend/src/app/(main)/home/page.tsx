@@ -7,6 +7,7 @@ import React, { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchReviews } from "@/lib/queries";
+import { useSearchParams } from "next/navigation";
 
 const ReviewFeedSkeleton = () => (
   <div className="flex flex-col items-center gap-8 w-full">
@@ -36,9 +37,10 @@ const ReviewFeedSkeleton = () => (
   </div>
 );
 
-
 export default function Home() {
   const { ref, inView } = useInView();
+  const searchParams = useSearchParams();
+  const categories = searchParams.getAll('category');
 
   const {
     data,
@@ -49,8 +51,8 @@ export default function Home() {
     isFetchingNextPage,
     status,
   } = useInfiniteQuery({
-    queryKey: ['reviews'],
-    queryFn: fetchReviews,
+    queryKey: ['reviews', categories],
+    queryFn: ({ pageParam = 1 }) => fetchReviews({ pageParam, categories }),
     initialPageParam: 1,
     staleTime: 0,
     refetchOnWindowFocus: false,
@@ -101,7 +103,7 @@ export default function Home() {
                 content: review.content,
                 likes: review.likes,
                 comments: review.comments.length,
-                isFollowing: false, // Dato de ejemplo
+                isFollowing: false, 
               };
               return <ReviewCard key={review._id} review={reviewForCard} />;
             })}
@@ -112,8 +114,14 @@ export default function Home() {
 
         {isFetchingNextPage && <ReviewFeedSkeleton />}
         
-        {!hasNextPage && !isFetching && <p className="text-muted-foreground">No hay más reseñas para mostrar.</p>}
+        {!hasNextPage && !isFetching && data.pages[0].reviews.length === 0 && (
+          <p className="text-muted-foreground">No hay reseñas para esta selección.</p>
+        )}
+
+        {!hasNextPage && !isFetching && data.pages[0].reviews.length > 0 &&(
+          <p className="text-muted-foreground">No hay más reseñas para mostrar.</p>
+        )}
       </div>
     </div>
   );
-} 
+}

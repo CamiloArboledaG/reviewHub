@@ -9,8 +9,14 @@ export const fetchCategories = async (): Promise<Category[]> => {
   return res.json();
 };
 
-export const fetchReviews = async ({ pageParam = 1 }): Promise<ReviewsPage> => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews?page=${pageParam}&limit=5`, { credentials: 'include' });
+export const fetchReviews = async ({ pageParam = 1, categories }: { pageParam?: number, categories?: string[] | null }): Promise<ReviewsPage> => {
+  let url = `${process.env.NEXT_PUBLIC_API_URL}/reviews?page=${pageParam}&limit=5`;
+  if (categories && categories.length > 0) {
+    categories.forEach(category => {
+      url += `&category=${category}`;
+    });
+  }
+  const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) {
     throw new Error('Network response was not ok');
   }
@@ -79,4 +85,4 @@ export const logoutUser = async () => {
   }
 
   return res.json();
-}; 
+};

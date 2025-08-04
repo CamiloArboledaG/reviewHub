@@ -7,6 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Category } from '@/lib/definitions';
 import { fetchCategories } from '@/lib/queries';
 import NotificationToast from './NotificationToast';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 const categoryIcons: { [key: string]: LucideIcon } = {
     game: Gamepad2,
@@ -17,9 +19,15 @@ const categoryIcons: { [key: string]: LucideIcon } = {
 
 const Sidebar = () => {
   const [toastConfig, setToastConfig] = useState({ show: false, message: '', variant: 'default' as 'default' | 'destructive' });
+  
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedCategories = searchParams.getAll('category');
+
   const { data: categories, isLoading, isError } = useQuery<Category[]>({
     queryKey: ['categories'],
     queryFn: fetchCategories,
+    staleTime: 0,
     initialData: [],
   });
 
@@ -29,6 +37,23 @@ const Sidebar = () => {
     setTimeout(() => {
       setToastConfig({ show: false, message: '', variant: 'default' });
     }, 2000);
+  };
+
+  const handleCategoryClick = (e: React.MouseEvent<HTMLAnchorElement>, categorySlug: string) => {
+    e.preventDefault();
+    const params = new URLSearchParams(searchParams.toString());
+    const currentCategories = params.getAll('category');
+
+    if (currentCategories.includes(categorySlug)) {
+      const newCategories = currentCategories.filter(slug => slug !== categorySlug);
+      params.delete('category');
+      newCategories.forEach(slug => params.append('category', slug));
+    } else {
+      params.append('category', categorySlug);
+    }
+
+    const queryString = params.toString();
+    router.push(`/home${queryString ? `?${queryString}` : ''}`);
   };
 
   return (
@@ -42,10 +67,10 @@ const Sidebar = () => {
         <div className="flex flex-col gap-8">
           <div>
             <nav className="flex flex-col gap-2">
-              <a href="#" className="flex items-center gap-3 px-3 py-2 text-accent-foreground bg-accent rounded-md">
+              <Link href="/home" className={`flex items-center gap-3 px-3 py-2 rounded-md ${selectedCategories.length === 0 ? 'text-accent-foreground bg-accent' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}>
                 <Home className="h-5 w-5" />
                 <span>Feed</span>
-              </a>
+              </Link>
               <a 
                 href="#" 
                 onClick={handleTrendsClick}
@@ -76,11 +101,13 @@ const Sidebar = () => {
               {isError && <p className="px-3 text-red-500">Error al cargar.</p>}
               {!isLoading && !isError && categories?.map((category) => {
                 const Icon = categoryIcons[category.slug];
+                const isSelected = selectedCategories.includes(category.slug);
                 return (
                   <a
                     key={category._id}
                     href="#"
-                    className="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md"
+                    onClick={(e) => handleCategoryClick(e, category.slug)}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-md ${isSelected ? 'text-accent-foreground bg-accent-foreground/10' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
                   >
                     {Icon && <Icon className="h-5 w-5" />}
                     <span>{category.name}</span>

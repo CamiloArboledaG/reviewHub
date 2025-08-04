@@ -31,7 +31,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 };
 
 export const register = async (req, res) => {
-  const { name, username, email, password } = req.body;
+  const { name, username, email, password, avatarUrl } = req.body;
 
   try {
     const userExists = await User.findOne({ $or: [{ email }, { username }] });
@@ -50,6 +50,7 @@ export const register = async (req, res) => {
       username,
       email,
       password,
+      avatarUrl
     });
 
     if (user) {

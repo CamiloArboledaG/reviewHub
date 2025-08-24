@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Category } from '@/lib/definitions';
 import { fetchCategories } from '@/lib/queries';
 import NotificationToast from './NotificationToast';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 const categoryIcons: { [key: string]: LucideIcon } = {
@@ -22,6 +22,7 @@ const Sidebar = () => {
   
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const selectedCategories = searchParams.getAll('category');
 
   const { data: categories, isLoading, isError } = useQuery<Category[]>({
@@ -63,26 +64,26 @@ const Sidebar = () => {
         message={toastConfig.message} 
         variant={toastConfig.variant} 
       />
-      <aside className="w-64 flex-shrink-0 px-4 py-8 bg-card border-r border-border fixed top-16 h-[calc(100vh-4rem)]">
+      <aside className="w-64 flex-shrink-0 px-4 py-8 bg-card border-r border-border fixed top-16 h-[calc(100vh-4rem)]" data-view={(pathname === '/following') ? 'following' : (selectedCategories.length > 0 ? 'home_with_categories' : 'home')}>
         <div className="flex flex-col gap-8">
           <div>
             <nav className="flex flex-col gap-2">
-              <Link href="/home" className={`flex items-center gap-3 px-3 py-2 rounded-md ${selectedCategories.length === 0 ? 'text-accent-foreground bg-accent' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}>
+              <Link href="/home" className={`flex items-center gap-3 px-3 py-2 rounded-md ${(pathname === '/following') ? 'text-muted-foreground hover:text-foreground hover:bg-accent' : (selectedCategories.length === 0 ? 'text-accent-foreground bg-accent' : 'text-muted-foreground hover:text-foreground hover:bg-accent')}`}>
                 <Home className="h-5 w-5" />
                 <span>Feed</span>
               </Link>
-              <a 
+              {/* <a 
                 href="#" 
                 onClick={handleTrendsClick}
                 className="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md"
               >
                 <TrendingUp className="h-5 w-5" />
                 <span>Tendencias</span>
-              </a>
-              <a href="#" className="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md">
+              </a> */}
+              <Link href="/following" className={`flex items-center gap-3 px-3 py-2 rounded-md ${(pathname === '/following') ? 'text-accent-foreground bg-accent' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}>
                 <Users className="h-5 w-5" />
                 <span>Siguiendo</span>
-              </a>
+              </Link>
             </nav>
           </div>
           <div className="border-t border-border -mx-4"></div>

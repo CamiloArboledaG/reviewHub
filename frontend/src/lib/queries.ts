@@ -1,4 +1,4 @@
-import { Category, LoginCredentials, RegisterCredentials } from './definitions';
+import { Category, LoginCredentials, RegisterCredentials, User } from './definitions';
 import { ReviewsPage } from './definitions';
 
 export const fetchCategories = async (): Promise<Category[]> => {
@@ -110,6 +110,23 @@ export const unfollowUser = async (userId: string) => {
   if (!res.ok) {
     const errorData = await res.json();
     throw new Error(errorData.message || 'Error al dejar de seguir al usuario');
+  }
+
+  return res.json();
+};
+
+export type FollowingResponse = { following: User[] };
+
+export const getFollowing = async (): Promise<FollowingResponse> => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/following`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    throw new Error('Error al obtener los usuarios que sigues');
   }
 
   return res.json();

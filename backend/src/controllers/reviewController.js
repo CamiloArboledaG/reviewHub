@@ -61,7 +61,6 @@ export const getReviews = async (req, res) => {
 
     let [reviews, totalReviews] = await Promise.all([reviewsPromise, countPromise]);
 
-    console.log("req.user", req.user);
     if (req.user) {
         const currentUser = await User.findById(req.user._id).select('following').lean();
         const followingSet = currentUser ? new Set(currentUser.following.map(id => id.toString())) : new Set();

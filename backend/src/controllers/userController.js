@@ -53,3 +53,20 @@ export const unfollow = async (req, res) => {
     res.status(500).json({ message: 'Error al dejar de seguir al usuario.', error });
   }
 };
+
+export const getFollowing = async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.user.id)
+      .populate({ path: 'following', select: 'name username avatarUrl _id' })
+      .select('following');
+
+    if (!currentUser) {
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+
+    return res.status(200).json({ following: currentUser.following });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error al obtener seguidos.', error: error.message });
+  }
+};
+  

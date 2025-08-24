@@ -12,7 +12,7 @@ import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/context/ToastContext';
 import { AvatarSelector } from '@/components/AvatarSelector';
-import Image from 'next/image';
+import { useAuth } from '@/context/AuthContext';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -24,12 +24,19 @@ const RegisterPage = () => {
   });
   const router = useRouter();
   const { showToast } = useToast();
+  const { login } = useAuth();
 
   const mutation = useMutation({
     mutationFn: registerUser,
-    onSuccess: (data) => {
-      console.log('Registro exitoso:', data);
-      router.push('/home');
+    onSuccess: async () => {
+      // Inicia sesión automáticamente tras registrarse para hidratar AuthContext y Header
+      try {
+        await login({ username: formData.username, password: formData.password });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Error al iniciar sesión tras el registro';
+        showToast(message, 'destructive');
+        router.push('/login');
+      }
     },
     onError: (error) => {
       showToast(error.message, 'destructive');

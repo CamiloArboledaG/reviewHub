@@ -19,10 +19,12 @@ app.use(cookieParser())
 import categoryRoutes from './routes/categories.js';
 import reviewRoutes from './routes/reviews.js';
 import authRoutes from './routes/auth.js';
+import userRoutes from './routes/users.js';
 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // TODO: Importar y usar rutas
 

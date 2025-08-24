@@ -86,3 +86,31 @@ export const logoutUser = async () => {
 
   return res.json();
 };
+
+export const followUser = async (userId: string) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}/follow`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || 'Error al seguir al usuario');
+  }
+
+  return res.json();
+};
+
+export const unfollowUser = async (userId: string) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}/unfollow`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || 'Error al dejar de seguir al usuario');
+  }
+
+  return res.json();
+};

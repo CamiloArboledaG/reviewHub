@@ -86,7 +86,9 @@ export default function Home() {
           <React.Fragment key={i}>
             {page.reviews.map((review) => {
               const reviewForCard = {
+                _id: review._id,
                 user: {
+                  _id: review.user._id,
                   name: review.user.name,
                   handle: review.user.username,
                   avatarUrl: review.user.avatarUrl || '',
@@ -103,7 +105,7 @@ export default function Home() {
                 content: review.content,
                 likes: review.likes,
                 comments: review.comments.length,
-                isFollowing: false, 
+                isFollowing: review.isFollowing,
               };
               return <ReviewCard key={review._id} review={reviewForCard} />;
             })}

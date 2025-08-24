@@ -3,15 +3,17 @@
 import { Film, Gamepad2, Heart, MessageCircle, MoreHorizontal, Share2, Star, Tv, Book, LucideProps } from 'lucide-react';
 import Image from 'next/image';
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Category } from '@/lib/definitions';
-import { fetchCategories } from '@/lib/queries';
+import { fetchCategories, followUser, unfollowUser } from '@/lib/queries';
 import { ForwardRefExoticComponent, RefAttributes } from 'react';
 import { Button } from './ui/button';
 
 type ReviewCardProps = {
   review: {
+    _id: string;
     user: {
+        _id: string;
       name: string;
       handle: string;
       avatarUrl: string;
@@ -50,6 +52,7 @@ const categoryStyles = {
 }
 
 const ReviewCard = ({ review }: ReviewCardProps) => {
+    const queryClient = useQueryClient();
     const { data: categories } = useQuery<Category[]>({
         queryKey: ['categories'],
         queryFn: fetchCategories,
@@ -57,6 +60,29 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
 
   const { user, postTime, category, item, rating, content, likes, comments, isFollowing } = review;
   const currentCategory = categories?.find(c => c.slug === category.slug);
+
+  const followMutation = useMutation({
+    mutationFn: () => followUser(user._id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+    },
+  });
+
+  const unfollowMutation = useMutation({
+    mutationFn: () => unfollowUser(user._id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+    },
+  });
+
+  const handleFollow = () => {
+    followMutation.mutate();
+  };
+
+  const handleUnfollow = () => {
+    unfollowMutation.mutate();
+  };
+
 
   const renderStars = () => {
     const stars = [];
@@ -113,12 +139,12 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
         </div>
         <div className="flex items-center gap-2">
             {isFollowing ? (
-                 <Button className="px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-full">
-                    Siguiendo
+                 <Button className="px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-full" onClick={handleUnfollow} disabled={unfollowMutation.isPending}>
+                    {unfollowMutation.isPending ? 'Dejando de seguir...' : 'Siguiendo'}
                 </Button>
             ) : (
-                <Button className="px-4 py-2 text-sm font-semibold text-foreground bg-card border border-border rounded-full hover:bg-accent">
-                    Seguir
+                <Button className="px-4 py-2 text-sm font-semibold text-foreground bg-card border border-border rounded-full hover:bg-accent" onClick={handleFollow} disabled={followMutation.isPending}>
+                    {followMutation.isPending ? 'Siguiendo...' : 'Seguir'}
                 </Button>
             )}
           

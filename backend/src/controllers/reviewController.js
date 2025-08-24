@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 const Review = mongoose.model('Review');
 const Category = mongoose.model('Category');
 const Item = mongoose.model('Item');
+const User = mongoose.model('User');
 
 
 export const getReviews = async (req, res) => {
@@ -42,7 +43,7 @@ export const getReviews = async (req, res) => {
     const reviewsPromise = Review.find(query)
       .populate({
         path: 'user',
-        select: 'name username avatarUrl'
+        select: 'name username avatarUrl _id'
       })
       .populate({
         path: 'item',
@@ -58,7 +59,23 @@ export const getReviews = async (req, res) => {
 
     const countPromise = Review.countDocuments(query);
 
-    const [reviews, totalReviews] = await Promise.all([reviewsPromise, countPromise]);
+    let [reviews, totalReviews] = await Promise.all([reviewsPromise, countPromise]);
+
+    console.log("req.user", req.user);
+    if (req.user) {
+        const currentUser = await User.findById(req.user._id).select('following').lean();
+        const followingSet = currentUser ? new Set(currentUser.following.map(id => id.toString())) : new Set();
+        
+        reviews = reviews.map(review => ({
+            ...review,
+            isFollowing: followingSet.has(review.user._id.toString()),
+        }));
+    } else {
+        reviews = reviews.map(review => ({
+            ...review,
+            isFollowing: false,
+        }));
+    }
 
     const totalPages = Math.ceil(totalReviews / limit);
     const hasNextPage = page < totalPages;

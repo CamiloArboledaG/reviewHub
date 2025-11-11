@@ -15,7 +15,7 @@ const Header = () => {
       <div className="flex justify-between items-center h-16 px-4 sm:px-6">
         <div className="flex items-center">
           <Link href="/home">
-            <h1 className="text-2xl font-bold text-purple-600">ReviewHub</h1>
+            <h1 className="text-2xl font-bold text-purple-800">ReviewHub</h1>
           </Link>
         </div>
         <div className="flex items-center gap-6">

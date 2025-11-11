@@ -8,6 +8,7 @@ import { useInView } from "react-intersection-observer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchReviews } from "@/lib/queries";
 import { useSearchParams } from "next/navigation";
+import NewReview from "@/components/NewReview";
 
 const ReviewFeedSkeleton = () => (
   <div className="flex flex-col items-center gap-8 w-full">
@@ -113,6 +114,8 @@ export default function Home() {
         ))}
 
         <div ref={ref} className="h-10" />
+
+        <NewReview />
 
         {isFetchingNextPage && <ReviewFeedSkeleton />}
         

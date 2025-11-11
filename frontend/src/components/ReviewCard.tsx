@@ -1,13 +1,13 @@
 'use client';
 
-import { Film, Gamepad2, Heart, MessageCircle, MoreHorizontal, Share2, Star, Tv, Book, LucideProps } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Share2, Star } from 'lucide-react';
 import Image from 'next/image';
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Category } from '@/lib/definitions';
 import { fetchCategories, followUser, unfollowUser } from '@/lib/queries';
-import { ForwardRefExoticComponent, RefAttributes } from 'react';
 import { Button } from './ui/button';
+import { categoryIcons, categoryStyles } from '@/lib/styles';
 
 type ReviewCardProps = {
   review: {
@@ -36,20 +36,6 @@ type ReviewCardProps = {
     isFollowing?: boolean;
   };
 };
-
-const categoryIcons: { [key: string]: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> } = {
-    game: Gamepad2,
-    movie: Film,
-    series: Tv,
-    book: Book
-}
-
-const categoryStyles = {
-    game: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-    movie: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-    series: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-    book: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-}
 
 const ReviewCard = ({ review }: ReviewCardProps) => {
     const queryClient = useQueryClient();

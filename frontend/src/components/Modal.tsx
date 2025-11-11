@@ -9,9 +9,10 @@ interface ModalProps {
   description?: string;
   children: React.ReactNode;
   className?: string;
+  titleIcon?: React.ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, description, children, className = '' }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, description, children, className = '', titleIcon }) => {
   if (!isOpen) return null;
 
   return (
@@ -26,7 +27,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, description, chil
         {(title || description) && (
           <div className="px-6 pt-6 pb-4 border-b border-gray-200/50">
             <div className="flex justify-between items-start mb-2">
-              {title && <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>}
+              {title && (
+                <div className="flex items-center gap-3">
+                  {titleIcon && <div className="flex-shrink-0">{titleIcon}</div>}
+                  <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
+                </div>
+              )}
               <button 
                 onClick={onClose} 
                 className="text-gray-500 hover:text-gray-700 cursor-pointer ml-4 flex-shrink-0"

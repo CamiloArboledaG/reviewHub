@@ -30,10 +30,10 @@ export const categoryIconColors: { [key: string]: string } = {
 }
 
 export const categoryDescriptions: { [key: string]: string } = {
-    series: "Explora tu contenido favorito",
-    book: "Descubre historias increíbles",
-    movie: "Disfruta el mejor cine",
-    game: "Juega y diviértete",
+    series: "Comparte tu opinión sobre series",
+    book: "Reseña tus libros favoritos",
+    movie: "Comparte tu opinión sobre películas",
+    game: "Reseña tus juegos favoritos",
 }
 
 

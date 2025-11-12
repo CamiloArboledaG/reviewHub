@@ -1,4 +1,4 @@
-import { Category, LoginCredentials, RegisterCredentials, User } from './definitions';
+import { Category, LoginCredentials, RegisterCredentials, User, ItemsResponse } from './definitions';
 import { ReviewsPage } from './definitions';
 
 export const fetchCategories = async (): Promise<Category[]> => {
@@ -127,6 +127,35 @@ export const getFollowing = async (): Promise<FollowingResponse> => {
 
   if (!res.ok) {
     throw new Error('Error al obtener los usuarios que sigues');
+  }
+
+  return res.json();
+};
+
+export const searchItems = async ({
+  categoryId,
+  search = '',
+  page = 1,
+  limit = 10
+}: {
+  categoryId: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<ItemsResponse> => {
+  const params = new URLSearchParams({
+    category: categoryId,
+    search,
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items?${params}`, {
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    throw new Error('Error al buscar items');
   }
 
   return res.json();

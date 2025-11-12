@@ -20,13 +20,13 @@ import categoryRoutes from './routes/categories.js';
 import reviewRoutes from './routes/reviews.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
+import itemRoutes from './routes/items.js';
 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-
-// TODO: Importar y usar rutas
+app.use('/api/items', itemRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => app.listen(process.env.PORT, () =>

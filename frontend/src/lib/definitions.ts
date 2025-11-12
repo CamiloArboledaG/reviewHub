@@ -14,6 +14,7 @@ export type User = {
 export type Item = {
   _id: string;
   title: string;
+  description: string;
   imageUrl?: string;
   category: Category;
 }
@@ -52,4 +53,12 @@ export type RegisterCredentials = {
   email: string;
   password?: string;
   avatarUrl?: string;
+};
+
+export type ItemsResponse = {
+  items: Item[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  hasNextPage: boolean;
 }; 

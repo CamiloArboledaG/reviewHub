@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { Plus, ArrowLeft } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Plus, ArrowLeft, Search, Loader2 } from 'lucide-react';
 import Modal from './Modal';
-import { fetchCategories } from '@/lib/queries';
-import { Category } from '@/lib/definitions';
+import { fetchCategories, searchItems } from '@/lib/queries';
+import { Category, Item } from '@/lib/definitions';
 import { useQuery } from '@tanstack/react-query';
 import { categoryIcons, categoryGradients, categoryHoverGradients, categoryIconColors, categoryDescriptions, categoryBorderGlow } from '@/lib/styles';
 
@@ -12,19 +12,37 @@ const NewReview = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+    const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [colorExpandKey, setColorExpandKey] = useState(0);
     const colorExpandRef = useRef<{ x: number; y: number; color: string } | null>(null);
+
+    // Debounce para el input de búsqueda
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     const openModal = () => {
         setIsModalOpen(true);
         setCurrentStep(1);
         setSelectedCategory(null);
+        setSelectedItem(null);
+        setSearchQuery('');
+        setDebouncedSearch('');
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
         setCurrentStep(1);
         setSelectedCategory(null);
+        setSelectedItem(null);
+        setSearchQuery('');
+        setDebouncedSearch('');
     };
 
     const handleCategorySelect = (category: Category, event: React.MouseEvent<HTMLButtonElement>) => {
@@ -58,15 +76,34 @@ const NewReview = () => {
     const handleBackToStep1 = () => {
         setCurrentStep(1);
         setSelectedCategory(null);
+        setSelectedItem(null);
+        setSearchQuery('');
+        setDebouncedSearch('');
     };
 
-    
-  const { data: categories, isLoading, isError } = useQuery<Category[]>({
-    queryKey: ['categories'],
-    queryFn: fetchCategories,
-    staleTime: 0,
-    initialData: [],
-  });
+    const handleItemSelect = (item: Item) => {
+        setSelectedItem(item);
+    };
+
+    // Query para categorías
+    const { data: categories, isLoading, isError } = useQuery<Category[]>({
+        queryKey: ['categories'],
+        queryFn: fetchCategories,
+        staleTime: 0,
+        initialData: [],
+    });
+
+    // Query para buscar items
+    const { data: itemsData, isLoading: isLoadingItems } = useQuery({
+        queryKey: ['items', selectedCategory?._id, debouncedSearch],
+        queryFn: () => searchItems({
+            categoryId: selectedCategory!._id,
+            search: debouncedSearch,
+            limit: 20,
+        }),
+        enabled: !!selectedCategory && currentStep === 2,
+        staleTime: 30000,
+    });
 
     const getModalTitle = () => {
         if (currentStep === 1) {
@@ -180,9 +217,80 @@ const NewReview = () => {
                                 <ArrowLeft className="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-1" />
                             </button>
 
-                            {/* Aquí irá el formulario del paso 2 */}
-                            <div className="text-center py-8">
-                                <p className="text-gray-500">Formulario del paso 2 (próximamente)</p>
+                            {/* Buscador de items */}
+                            <div className="space-y-3">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Buscar {selectedCategory.name.toLowerCase()}
+                                </label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder={`Buscar ${selectedCategory.name.toLowerCase()}...`}
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                    />
+                                </div>
+
+                                {/* Lista de resultados */}
+                                <div className="max-h-[400px] overflow-y-auto space-y-2 border border-gray-200 rounded-lg p-2">
+                                    {isLoadingItems && (
+                                        <div className="flex items-center justify-center py-8">
+                                            <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
+                                            <span className="ml-2 text-gray-600">Buscando...</span>
+                                        </div>
+                                    )}
+
+                                    {!isLoadingItems && itemsData?.items.length === 0 && (
+                                        <div className="text-center py-8">
+                                            <p className="text-gray-500">
+                                                {debouncedSearch
+                                                    ? 'No se encontraron resultados'
+                                                    : 'Escribe para buscar'}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {!isLoadingItems && itemsData?.items && itemsData.items.length > 0 && (
+                                        itemsData.items.map((item) => (
+                                            <button
+                                                key={item._id}
+                                                onClick={() => handleItemSelect(item)}
+                                                className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
+                                                    selectedItem?._id === item._id
+                                                        ? `${categoryBorderGlow[selectedCategory.slug]} bg-gray-50`
+                                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                {item.imageUrl && (
+                                                    <img
+                                                        src={item.imageUrl}
+                                                        alt={item.title}
+                                                        className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                                                    />
+                                                )}
+                                                <div className="flex-1 text-left min-w-0">
+                                                    <h4 className="font-semibold text-gray-900 truncate">
+                                                        {item.title}
+                                                    </h4>
+                                                    <p className="text-sm text-gray-600 line-clamp-2">
+                                                        {item.description}
+                                                    </p>
+                                                </div>
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+
+                                {/* Indicador de item seleccionado */}
+                                {selectedItem && (
+                                    <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                                        <p className="text-sm font-medium text-green-800">
+                                            ✓ Seleccionado: {selectedItem.title}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

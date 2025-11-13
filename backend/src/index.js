@@ -21,12 +21,14 @@ import reviewRoutes from './routes/reviews.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import itemRoutes from './routes/items.js';
+import uploadRoutes from './routes/upload.js';
 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/items', itemRoutes);
+app.use('/api/upload', uploadRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => app.listen(process.env.PORT, () =>

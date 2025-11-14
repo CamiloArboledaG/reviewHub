@@ -3,6 +3,8 @@ import mongoose from 'mongoose'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
+import swaggerUi from 'swagger-ui-express'
+import swaggerSpec from './config/swagger.js'
 import './models/index.js'; // Importar todos los modelos para registrarlos
 
 dotenv.config()
@@ -14,6 +16,12 @@ app.use(cors({
 }));
 app.use(express.json())
 app.use(cookieParser())
+
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'ReviewHub API Docs'
+}))
 
 // Importar y usar rutas
 import categoryRoutes from './routes/categories.js';

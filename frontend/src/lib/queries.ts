@@ -1,10 +1,30 @@
-import { Category, LoginCredentials, RegisterCredentials, User, ItemsResponse } from './definitions';
+import { Category, LoginCredentials, RegisterCredentials, User, ItemsResponse, Avatar } from './definitions';
 import { ReviewsPage } from './definitions';
 
 export const fetchCategories = async (): Promise<Category[]> => {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, { credentials: 'include' });
   if (!res.ok) {
     throw new Error('Error al obtener las categorías');
+  }
+  return res.json();
+};
+
+export const fetchAvatars = async (category?: string): Promise<Avatar[]> => {
+  const url = category
+    ? `${process.env.NEXT_PUBLIC_API_URL}/avatars?category=${category}`
+    : `${process.env.NEXT_PUBLIC_API_URL}/avatars`;
+
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    throw new Error('Error al obtener avatares');
+  }
+  return res.json();
+};
+
+export const fetchDefaultAvatars = async (): Promise<Avatar[]> => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/avatars/defaults`, { credentials: 'include' });
+  if (!res.ok) {
+    throw new Error('Error al obtener avatares predeterminados');
   }
   return res.json();
 };

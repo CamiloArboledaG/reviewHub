@@ -1,3 +1,4 @@
+import './Avatar.js';
 import './Category.js';
 import './Comment.js';
 import './Item.js';

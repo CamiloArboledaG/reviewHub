@@ -92,7 +92,7 @@ export default function Home() {
                   _id: review.user._id,
                   name: review.user.name,
                   handle: review.user.username,
-                  avatarUrl: review.user.avatarUrl || '',
+                  avatar: review.user.avatar,
                 },
                 postTime: formatTimeAgo(review.createdAt),
                 category: {

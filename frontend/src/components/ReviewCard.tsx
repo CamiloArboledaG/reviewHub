@@ -1,8 +1,8 @@
 'use client';
 
-import { Heart, MessageCircle, MoreHorizontal, Share2, Star } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Share2, Star, HelpCircle, User } from 'lucide-react';
 import Image from 'next/image';
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Category } from '@/lib/definitions';
 import { fetchCategories, followUser, unfollowUser } from '@/lib/queries';
@@ -16,7 +16,10 @@ type ReviewCardProps = {
         _id: string;
       name: string;
       handle: string;
-      avatarUrl: string;
+      avatar?: {
+        imageUrl: string;
+        name: string;
+      };
     };
     postTime: string;
     category: {
@@ -39,6 +42,9 @@ type ReviewCardProps = {
 
 const ReviewCard = ({ review }: ReviewCardProps) => {
     const queryClient = useQueryClient();
+    const [avatarError, setAvatarError] = useState(false);
+    const [itemImageError, setItemImageError] = useState(false);
+
     const { data: categories } = useQuery<Category[]>({
         queryKey: ['categories'],
         queryFn: fetchCategories,
@@ -102,8 +108,21 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
     <div className="bg-card rounded-lg shadow-sm border border-border p-6 w-full max-w-2xl">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-muted rounded-full">
-            <Image src={user.avatarUrl ? user.avatarUrl : '/avatares/avatar1.svg'} alt={user.name} width={48} height={48} className="rounded-full" />
+          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden relative">
+            {user.avatar?.imageUrl && !avatarError ? (
+              <Image
+                src={user.avatar.imageUrl}
+                alt={user.name}
+                fill
+                sizes="48px"
+                className="object-cover rounded-full"
+                onError={() => setAvatarError(true)}
+                placeholder="blur"
+                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjZTVlN2ViIi8+PC9zdmc+"
+              />
+            ) : (
+              <User className="h-6 w-6 text-gray-400" />
+            )}
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -140,8 +159,21 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
         </div>
       </div>
       <div className="mt-4 flex gap-6">
-        <div className="w-32 h-40 bg-muted rounded-md flex-shrink-0">
-          {/* <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover rounded-md" /> */}
+        <div className="w-32 h-40 bg-gray-200 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden relative">
+          {item.imageUrl && !itemImageError ? (
+            <Image
+              src={item.imageUrl}
+              alt={item.title}
+              fill
+              sizes="128px"
+              className="object-cover rounded-md"
+              onError={() => setItemImageError(true)}
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2U1ZTdlYiIvPjwvc3ZnPg=="
+            />
+          ) : (
+            <HelpCircle className="h-12 w-12 text-gray-400" />
+          )}
         </div>
         <div className="flex flex-col">
           <h2 className="text-xl font-bold text-foreground">{item.title}</h2>

@@ -57,7 +57,11 @@ export const unfollow = async (req, res) => {
 export const getFollowing = async (req, res) => {
   try {
     const currentUser = await User.findById(req.user.id)
-      .populate({ path: 'following', select: 'name username avatarUrl _id' })
+      .populate({
+        path: 'following',
+        select: 'name username _id',
+        populate: { path: 'avatar', select: 'imageUrl name' }
+      })
       .select('following');
 
     if (!currentUser) {

@@ -81,14 +81,18 @@ export default function FollowingPage() {
       <div className="max-w-2xl mx-auto space-y-3">
         {following.map((user: User) => (
           <div key={user._id} className="bg-card rounded-lg shadow-sm border border-border p-4 flex items-center gap-4">
-            <div className="w-12 h-12">
-              <Image
-                src={user.avatarUrl ? user.avatarUrl : "/avatares/avatar1.svg"}
-                alt={user.name || "avatar"}
-                width={48}
-                height={48}
-                className="rounded-full"
-              />
+            <div className="w-12 h-12 relative">
+              {user.avatar?.imageUrl ? (
+                <Image
+                  src={user.avatar.imageUrl}
+                  alt={user.name || "avatar"}
+                  width={48}
+                  height={48}
+                  className="rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-200 rounded-full" />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">{user.name}</p>

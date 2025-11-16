@@ -88,9 +88,38 @@ const options = {
               type: 'string',
               description: 'Email del usuario',
             },
-            avatarUrl: {
+            avatar: {
+              $ref: '#/components/schemas/Avatar',
+            },
+          },
+        },
+        Avatar: {
+          type: 'object',
+          properties: {
+            _id: {
               type: 'string',
-              description: 'URL del avatar',
+              description: 'ID del avatar',
+            },
+            name: {
+              type: 'string',
+              description: 'Nombre del avatar',
+            },
+            imageUrl: {
+              type: 'string',
+              description: 'URL de la imagen en Cloudinary',
+            },
+            publicId: {
+              type: 'string',
+              description: 'Public ID de Cloudinary',
+            },
+            isDefault: {
+              type: 'boolean',
+              description: 'Si es un avatar por defecto',
+            },
+            category: {
+              type: 'string',
+              enum: ['human', 'animal', 'fantasy', 'abstract', 'custom'],
+              description: 'Categoría del avatar',
             },
           },
         },

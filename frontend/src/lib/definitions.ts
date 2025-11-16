@@ -4,11 +4,19 @@ export type Category = {
   slug: 'game' | 'movie' | 'series' | 'book';
 };
 
+export type Avatar = {
+  _id: string;
+  name: string;
+  imageUrl: string;
+  category: 'human' | 'animal' | 'fantasy' | 'abstract' | 'custom';
+  isDefault: boolean;
+};
+
 export type User = {
   _id: string;
   name:string;
   username: string;
-  avatarUrl?: string;
+  avatar?: Avatar;
 }
 
 export type Item = {
@@ -52,7 +60,7 @@ export type RegisterCredentials = {
   username: string;
   email: string;
   password?: string;
-  avatarUrl?: string;
+  avatar?: string; // ID del avatar seleccionado
 };
 
 export type ItemsResponse = {

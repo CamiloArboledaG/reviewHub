@@ -27,9 +27,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const checkUser = async () => {
       try {
         const profile = await getProfile();
-        setUser(profile);
+        // Si profile es null o undefined, limpiar sesión
+        if (!profile) {
+          setUser(null);
+          // Limpiar la cookie inválida
+          await logoutUser().catch(() => {});
+        } else {
+          setUser(profile);
+        }
       } catch {
+        // Si hay error (401, 403, etc), limpiar sesión
         setUser(null);
+        // Limpiar la cookie inválida
+        await logoutUser().catch(() => {});
       }
       setLoading(false);
     };

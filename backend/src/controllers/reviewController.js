@@ -43,7 +43,8 @@ export const getReviews = async (req, res) => {
     const reviewsPromise = Review.find(query)
       .populate({
         path: 'user',
-        select: 'name username avatarUrl _id'
+        select: 'name username _id',
+        populate: { path: 'avatar', select: 'imageUrl name' }
       })
       .populate({
         path: 'item',

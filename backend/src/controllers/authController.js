@@ -31,7 +31,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 };
 
 export const register = async (req, res) => {
-  const { name, username, email, password, avatarUrl } = req.body;
+  const { name, username, email, password, avatar } = req.body;
 
   try {
     const userExists = await User.findOne({ $or: [{ email }, { username }] });
@@ -45,15 +45,22 @@ export const register = async (req, res) => {
       }
     }
 
-    const user = await User.create({
+    const userData = {
       name,
       username,
       email,
       password,
-      avatarUrl
-    });
+    };
+
+    if (avatar) {
+      userData.avatar = avatar;
+    }
+
+    const user = await User.create(userData);
 
     if (user) {
+      // Poblar el avatar antes de enviar la respuesta
+      await user.populate('avatar');
       sendTokenResponse(user, 201, res);
     } else {
       res.status(400).json({ message: 'Datos de usuario inválidos' });

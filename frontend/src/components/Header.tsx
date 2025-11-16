@@ -43,8 +43,18 @@ const Header = () => {
                     <Bell className="h-6 w-6 text-foreground" />
                   </Button>
                   <Button variant="ghost" className="p-2 rounded-full hover:bg-accent">
-                    <div className="w-6 h-6">
-                      <Image src={user?.avatarUrl ? user?.avatarUrl : '/avatares/avatar1.svg'} alt={user?.name || 'avatar'} width={38} height={38} className="rounded-full" />
+                    <div className="w-6 h-6 relative">
+                      {user?.avatar?.imageUrl ? (
+                        <Image
+                          src={user.avatar.imageUrl}
+                          alt={user?.name || 'avatar'}
+                          width={38}
+                          height={38}
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 rounded-full" />
+                      )}
                     </div>
                   </Button>
                   <Button variant="ghost" className="p-2 rounded-full hover:bg-accent" onClick={logout}>

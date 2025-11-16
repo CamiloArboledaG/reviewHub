@@ -20,7 +20,7 @@ const RegisterPage = () => {
     username: '',
     email: '',
     password: '',
-    avatarUrl: '',
+    avatar: '',
   });
   const router = useRouter();
   const { showToast } = useToast();
@@ -48,22 +48,22 @@ const RegisterPage = () => {
     setFormData(prev => ({ ...prev, [id]: value }));
   };
 
-  const handleAvatarChange = (avatarUrl: string) => {
-    setFormData(prev => ({ ...prev, avatarUrl }));
+  const handleAvatarChange = (avatarId: string) => {
+    setFormData(prev => ({ ...prev, avatar: avatarId }));
   };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.avatarUrl) {
+    if (!formData.avatar) {
       showToast('Por favor, selecciona un avatar.', 'destructive');
       return;
     }
-    mutation.mutate({ 
-      name: formData.name, 
-      username: formData.username, 
-      email: formData.email, 
-      password: formData.password, 
-      avatarUrl: formData.avatarUrl 
+    mutation.mutate({
+      name: formData.name,
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+      avatar: formData.avatar
     });
   };
 
@@ -79,7 +79,7 @@ const RegisterPage = () => {
         <form onSubmit={handleRegister}>
           <CardContent className="grid gap-4">
             <div className="flex justify-center mb-4">
-              <AvatarSelector onAvatarChange={handleAvatarChange} value={formData.avatarUrl} />
+              <AvatarSelector onAvatarChange={handleAvatarChange} value={formData.avatar} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="name">Nombre</Label>

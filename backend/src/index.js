@@ -24,6 +24,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 }))
 
 // Importar y usar rutas
+import avatarRoutes from './routes/avatars.js';
 import categoryRoutes from './routes/categories.js';
 import reviewRoutes from './routes/reviews.js';
 import authRoutes from './routes/auth.js';
@@ -31,6 +32,7 @@ import userRoutes from './routes/users.js';
 import itemRoutes from './routes/items.js';
 import uploadRoutes from './routes/upload.js';
 
+app.use('/api/avatars', avatarRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/auth', authRoutes);

@@ -1,5 +1,5 @@
 import express from 'express';
-import { createItem, searchItems, getItemById } from '../controllers/itemController.js';
+import { createItem, searchItems, getItemById, suggestItem } from '../controllers/itemController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import upload from '../middleware/uploadMiddleware.js';
 
@@ -61,6 +61,54 @@ const router = express.Router();
  *         description: Error del servidor
  */
 router.get('/', searchItems);
+
+/**
+ * @swagger
+ * /api/items/suggest:
+ *   post:
+ *     summary: Sugerir un nuevo item (pendiente de aprobación)
+ *     tags: [Items]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - description
+ *               - category
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Título del item sugerido
+ *               description:
+ *                 type: string
+ *                 description: Descripción del item sugerido
+ *               category:
+ *                 type: string
+ *                 description: ID de la categoría
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen del item (opcional)
+ *     responses:
+ *       201:
+ *         description: Item sugerido exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Item'
+ *       400:
+ *         description: Datos requeridos faltantes
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error del servidor
+ */
+router.post('/suggest', protect, suggestItem);
 
 /**
  * @swagger

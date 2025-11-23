@@ -85,25 +85,29 @@ const seedDB = async () => {
           title: 'The Last of Us Part II',
           category: gameCategory._id,
           description: 'Un videojuego de acción y aventura desarrollado por Naughty Dog. Una historia épica de venganza y redención.',
-          imageUrl: ''
+          imageUrl: 'https://res.cloudinary.com/dhxn0vpze/image/upload/v1737577614/reviewhub/defaults/item-placeholder_sieyzs.jpg',
+          status: 'active'
         },
         {
           title: 'Dune',
           category: movieCategory._id,
           description: 'Épica adaptación de la novela de Frank Herbert dirigida por Denis Villeneuve. Una obra maestra visual de ciencia ficción.',
-          imageUrl: 'https://res.cloudinary.com/dlb3zmaac/image/upload/v1763321823/reviewhub/items/kmbaf3ugksvsmytfvera.jpg'
+          imageUrl: 'https://res.cloudinary.com/dlb3zmaac/image/upload/v1763321823/reviewhub/items/kmbaf3ugksvsmytfvera.jpg',
+          status: 'active'
         },
         {
           title: 'Cien años de soledad',
           category: bookCategory._id,
           description: 'La obra maestra de Gabriel García Márquez. Una saga familiar que define el realismo mágico latinoamericano.',
-          imageUrl: 'https://res.cloudinary.com/dlb3zmaac/image/upload/v1763078394/reviewhub/items/hyx8oofd6ediwevuxqpe.jpg'
+          imageUrl: 'https://res.cloudinary.com/dlb3zmaac/image/upload/v1763078394/reviewhub/items/hyx8oofd6ediwevuxqpe.jpg',
+          status: 'active'
         },
         {
           title: '1984',
           category: bookCategory._id,
           description: 'La distopía clásica de George Orwell sobre un futuro totalitario. Una advertencia sobre el poder y el control.',
-          imageUrl: 'https://res.cloudinary.com/dlb3zmaac/image/upload/v1763079567/reviewhub/items/ccui8cuxlhj2xqlt3vp9.jpg'
+          imageUrl: 'https://res.cloudinary.com/dlb3zmaac/image/upload/v1763079567/reviewhub/items/ccui8cuxlhj2xqlt3vp9.jpg',
+          status: 'active'
         },
     ];
     const createdItems = await Item.insertMany(items);

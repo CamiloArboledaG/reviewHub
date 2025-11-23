@@ -72,8 +72,8 @@ export const searchItems = async (req, res) => {
       return res.status(400).json({ message: 'Se requiere especificar una categoría' });
     }
 
-    // Construir el filtro de búsqueda
-    const filter = { category };
+    // Construir el filtro de búsqueda (items activos y pendientes)
+    const filter = { category, status: { $in: ['active', 'pending'] } };
 
     if (search.trim()) {
       filter.$or = [
@@ -123,5 +123,40 @@ export const getItemById = async (req, res) => {
   } catch (error) {
     console.error('Error al obtener item:', error);
     res.status(500).json({ message: 'Error del servidor al obtener el item' });
+  }
+};
+
+// @desc    Sugerir un nuevo item (pendiente de aprobación)
+// @route   POST /api/items/suggest
+// @access  Private
+export const suggestItem = async (req, res) => {
+  try {
+    const { title, description, category } = req.body;
+
+    // Validar campos requeridos
+    if (!title || !description || !category) {
+      return res.status(400).json({ message: 'Título, descripción y categoría son requeridos' });
+    }
+
+    // Imagen por defecto - el admin subirá la imagen real al aprobar
+    const imageUrl = 'https://res.cloudinary.com/dhxn0vpze/image/upload/v1737577614/reviewhub/defaults/item-placeholder_sieyzs.jpg';
+
+    // Crear el item con status pending
+    const item = await Item.create({
+      title,
+      description,
+      imageUrl,
+      category,
+      status: 'pending',
+      suggestedBy: req.user._id,
+    });
+
+    // Populate la categoría antes de devolver
+    const populatedItem = await Item.findById(item._id).populate('category', 'name slug');
+
+    res.status(201).json(populatedItem);
+  } catch (error) {
+    console.error('Error al sugerir item:', error);
+    res.status(500).json({ message: 'Error del servidor al sugerir el item' });
   }
 };

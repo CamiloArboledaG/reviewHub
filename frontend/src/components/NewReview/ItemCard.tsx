@@ -45,9 +45,16 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, isSelected, category, onClick
 
             {/* Información del item */}
             <div className="flex-1 text-left min-w-0">
-                <h4 className="font-semibold text-gray-900 truncate">
-                    {item.title}
-                </h4>
+                <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-semibold text-gray-900 truncate">
+                        {item.title}
+                    </h4>
+                    {item.status === 'pending' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 flex-shrink-0">
+                            Pendiente
+                        </span>
+                    )}
+                </div>
                 <p className="text-sm text-gray-600 line-clamp-2">
                     {item.description}
                 </p>

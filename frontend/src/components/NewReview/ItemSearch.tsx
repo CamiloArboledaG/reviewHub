@@ -1,8 +1,9 @@
 'use client';
 
 import { Item, Category, ItemsResponse } from '@/lib/definitions';
-import { Search, Loader2, ArrowLeft } from 'lucide-react';
+import { Search, Loader2, Plus } from 'lucide-react';
 import ItemCard from './ItemCard';
+import { categorySuggestButtonColors } from '@/lib/styles';
 
 interface ItemSearchProps {
     category: Category;
@@ -13,7 +14,7 @@ interface ItemSearchProps {
     debouncedSearch: string;
     selectedItem: Item | null;
     onItemSelect: (item: Item) => void;
-    onBack: () => void;
+    onSuggestItem: () => void;
 }
 
 const ItemSearch: React.FC<ItemSearchProps> = ({
@@ -25,18 +26,10 @@ const ItemSearch: React.FC<ItemSearchProps> = ({
     debouncedSearch,
     selectedItem,
     onItemSelect,
-    onBack
+    onSuggestItem,
 }) => {
     return (
         <div className="space-y-4 animate-fade-in" key="step2">
-            <button
-                onClick={onBack}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 cursor-pointer group"
-                title="Volver"
-            >
-                <ArrowLeft className="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-1" />
-            </button>
-
             {/* Buscador de items */}
             <div className="space-y-3">
                 <label className="block text-sm font-medium text-gray-700">
@@ -83,16 +76,28 @@ const ItemSearch: React.FC<ItemSearchProps> = ({
                             />
                         ))
                     )}
-                </div>
 
-                {/* Indicador de item seleccionado */}
-                {selectedItem && (
-                    <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-sm font-medium text-green-800">
-                            ✓ Seleccionado: {selectedItem.title}
-                        </p>
-                    </div>
-                )}
+                    {/* Botón para sugerir item */}
+                    {!isLoadingItems && (() => {
+                        const colors = categorySuggestButtonColors[category.slug];
+                        return (
+                            <button
+                                onClick={onSuggestItem}
+                                className={`w-full mt-2 p-4 border-2 border-dashed border-gray-300 rounded-lg ${colors.border} ${colors.bg} transition-all duration-200 cursor-pointer group`}
+                            >
+                                <div className="flex items-center justify-center gap-3 text-gray-600">
+                                    <div className={`w-10 h-10 rounded-full ${colors.iconBg} flex items-center justify-center ${colors.iconBgHover} transition-colors`}>
+                                        <Plus className={`h-5 w-5 ${colors.text}`} />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className={`font-medium ${colors.textHover}`}>¿No encuentras tu {category.name.toLowerCase().slice(0, -1)}?</p>
+                                        <p className={`text-sm ${colors.subtext} ${colors.subtextHover}`}>Añade un nuevo {category.name.toLowerCase().slice(0, -1)} a la base de datos</p>
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })()}
+                </div>
             </div>
         </div>
     );

@@ -25,6 +25,8 @@ export type Item = {
   description: string;
   imageUrl?: string;
   category: Category;
+  status?: 'active' | 'pending';
+  suggestedBy?: string;
 }
 
 export type Review = {

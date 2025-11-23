@@ -5,6 +5,8 @@ import { Plus } from 'lucide-react';
 import Modal from './Modal';
 import CategorySelection from './NewReview/CategorySelection';
 import ItemSearch from './NewReview/ItemSearch';
+import SuggestItemStep from './NewReview/SuggestItemStep';
+import ReviewFormStep from './NewReview/ReviewFormStep';
 import { fetchCategories, searchItems } from '@/lib/queries';
 import { Category, Item } from '@/lib/definitions';
 import { useQuery } from '@tanstack/react-query';
@@ -83,8 +85,37 @@ const NewReview = () => {
         setDebouncedSearch('');
     };
 
+    const handleBackToStep2 = () => {
+        setCurrentStep(2);
+        setSelectedItem(null);
+    };
+
     const handleItemSelect = (item: Item) => {
         setSelectedItem(item);
+        // Ir directamente al step 4 (formulario de review)
+        setTimeout(() => {
+            setCurrentStep(4);
+        }, 100);
+    };
+
+    const handleSuggestItem = () => {
+        setCurrentStep(3);
+    };
+
+    const handleSuggestSuccess = (item: Item) => {
+        setSelectedItem(item);
+        // Ir al step 4 después de sugerir exitosamente
+        setCurrentStep(4);
+    };
+
+    const handleReviewSubmit = (data: { rating: number; content: string }) => {
+        console.log('Review data:', {
+            category: selectedCategory,
+            item: selectedItem,
+            ...data,
+        });
+        // TODO: Implementar la lógica para crear la review
+        closeModal();
     };
 
     // Query para categorías
@@ -108,30 +139,58 @@ const NewReview = () => {
     });
 
     const getModalTitle = () => {
-        if (currentStep === 1) {
-            return "Crear nueva reseña";
+        switch (currentStep) {
+            case 1:
+                return "Crear nueva reseña";
+            case 2:
+                return selectedCategory?.name || "";
+            case 3:
+                return `Sugerir ${selectedCategory?.name.toLowerCase().slice(0, -1)}`;
+            case 4:
+                return "Escribe tu reseña";
+            default:
+                return "";
         }
-        return `${selectedCategory?.name}`;
     };
 
     const getModalDescription = () => {
-        if (currentStep === 1) {
-            return "¿Qué tipo de contenido quieres reseñar?";
+        switch (currentStep) {
+            case 1:
+                return "¿Qué tipo de contenido quieres reseñar?";
+            case 2:
+                return `Busca el ${selectedCategory?.name.toLowerCase().slice(0, -1)} que quieres reseñar`;
+            case 3:
+                return "Ayúdanos a expandir nuestra base de datos";
+            case 4:
+                return "Comparte tu opinión con la comunidad";
+            default:
+                return "";
         }
-        return "Completa los detalles de tu reseña";
     };
 
-    const modalClassName = selectedCategory && currentStep === 2
+    const modalClassName = selectedCategory && (currentStep === 2 || currentStep === 3 || currentStep === 4)
         ? `border-2 ${categoryBorderGlow[selectedCategory.slug]} animate-border-glow`
         : '';
 
     const getTitleIcon = () => {
-        if (currentStep === 2 && selectedCategory) {
+        if ((currentStep === 2 || currentStep === 3 || currentStep === 4) && selectedCategory) {
             const Icon = categoryIcons[selectedCategory.slug];
             const iconColor = categoryIconColors[selectedCategory.slug] || 'text-gray-600';
             return <Icon className={`h-7 w-7 ${iconColor}`} />;
         }
         return undefined;
+    };
+
+    const getBackHandler = () => {
+        switch (currentStep) {
+            case 2:
+                return handleBackToStep1;
+            case 3:
+            case 4:
+                return handleBackToStep2;
+            default:
+                return undefined;
+        }
     };
 
     return (
@@ -167,6 +226,8 @@ const NewReview = () => {
                 description={getModalDescription()}
                 className={modalClassName}
                 titleIcon={getTitleIcon()}
+                showBackButton={currentStep > 1}
+                onBack={getBackHandler()}
             >
                 <div className="relative">
                     {currentStep === 1 && (
@@ -188,7 +249,23 @@ const NewReview = () => {
                             debouncedSearch={debouncedSearch}
                             selectedItem={selectedItem}
                             onItemSelect={handleItemSelect}
-                            onBack={handleBackToStep1}
+                            onSuggestItem={handleSuggestItem}
+                        />
+                    )}
+
+                    {currentStep === 3 && selectedCategory && (
+                        <SuggestItemStep
+                            category={selectedCategory}
+                            onSuccess={handleSuggestSuccess}
+                        />
+                    )}
+
+                    {currentStep === 4 && selectedCategory && selectedItem && (
+                        <ReviewFormStep
+                            category={selectedCategory}
+                            item={selectedItem}
+                            onSubmit={handleReviewSubmit}
+                            isSubmitting={false}
                         />
                     )}
                 </div>

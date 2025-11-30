@@ -133,15 +133,12 @@ export const suggestItem = async (req, res) => {
   try {
     const { title, description, category } = req.body;
 
-    // Validar campos requeridos
     if (!title || !description || !category) {
       return res.status(400).json({ message: 'Título, descripción y categoría son requeridos' });
     }
 
-    // Imagen por defecto - el admin subirá la imagen real al aprobar
     const imageUrl = 'https://res.cloudinary.com/dhxn0vpze/image/upload/v1737577614/reviewhub/defaults/item-placeholder_sieyzs.jpg';
 
-    // Crear el item con status pending
     const item = await Item.create({
       title,
       description,
@@ -151,7 +148,6 @@ export const suggestItem = async (req, res) => {
       suggestedBy: req.user._id,
     });
 
-    // Populate la categoría antes de devolver
     const populatedItem = await Item.findById(item._id).populate('category', 'name slug');
 
     res.status(201).json(populatedItem);

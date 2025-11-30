@@ -4,6 +4,68 @@ const Category = mongoose.model('Category');
 const Item = mongoose.model('Item');
 const User = mongoose.model('User');
 
+export const createReview = async (req, res) => {
+  try {
+    const { itemId, rating, content } = req.body;
+
+    if (!itemId || !rating || !content) {
+      return res.status(400).json({
+        message: 'Item, calificación y contenido son requeridos'
+      });
+    }
+
+    if (rating < 0.5 || rating > 5) {
+      return res.status(400).json({
+        message: 'La calificación debe estar entre 0.5 y 5'
+      });
+    }
+
+    const item = await Item.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ message: 'Item no encontrado' });
+    }
+
+    const existingReview = await Review.findOne({
+      user: req.user._id,
+      item: itemId
+    });
+
+    if (existingReview) {
+      return res.status(400).json({
+        message: 'Ya has creado una reseña para este item'
+      });
+    }
+
+    const review = await Review.create({
+      user: req.user._id,
+      item: itemId,
+      rating: {
+        value: rating,
+        max: 5
+      },
+      content: content.trim()
+    });
+
+    const populatedReview = await Review.findById(review._id)
+      .populate({
+        path: 'user',
+        select: 'name username _id',
+        populate: { path: 'avatar', select: 'imageUrl name' }
+      })
+      .populate({
+        path: 'item',
+        populate: {
+          path: 'category',
+          select: 'name slug'
+        }
+      });
+
+    res.status(201).json(populatedReview);
+  } catch (error) {
+    console.error('Error creating review:', error);
+    res.status(500).json({ message: 'Error al crear la reseña', error: error.message });
+  }
+};
 
 export const getReviews = async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;

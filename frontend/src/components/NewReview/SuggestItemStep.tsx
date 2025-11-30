@@ -8,6 +8,7 @@ import { Loader2, Plus } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { categoryReviewFormColors } from '@/lib/styles';
 import { theme } from '@/lib/theme';
+import { CustomInput } from '@/components/ui/custom-input';
 
 interface SuggestItemStepProps {
     category: Category;
@@ -60,13 +61,15 @@ const SuggestItemStep: React.FC<SuggestItemStepProps> = ({ category, onSuccess }
                 <label htmlFor="title" className="block text-sm font-bold text-gray-900 mb-2">
                     Título <span className="text-red-500">*</span>
                 </label>
-                <input
+                <CustomInput
                     id="title"
                     type="text"
+                    variant="md"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => setTitle((e.target as HTMLInputElement).value)}
                     placeholder={`Nombre del ${category.name.toLowerCase().slice(0, -1)}`}
-                    className={`w-full ${theme.input.md} ${colors.inputFocusRing} ${colors.inputFocusBorder}`}
+                    focusRing={colors.inputFocusRing}
+                    focusBorder={colors.inputFocusBorder}
                     disabled={mutation.isPending}
                 />
             </div>
@@ -76,13 +79,16 @@ const SuggestItemStep: React.FC<SuggestItemStepProps> = ({ category, onSuccess }
                 <label htmlFor="description" className="block text-sm font-bold text-gray-900 mb-2">
                     Descripción <span className="text-red-500">*</span>
                 </label>
-                <textarea
+                <CustomInput
                     id="description"
+                    asTextarea
+                    variant="md"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(e) => setDescription((e.target as HTMLTextAreaElement).value)}
                     placeholder={`Describe el ${category.name.toLowerCase().slice(0, -1)}`}
                     rows={4}
-                    className={`w-full ${theme.input.md} ${colors.inputFocusRing} ${colors.inputFocusBorder} resize-none`}
+                    focusRing={colors.inputFocusRing}
+                    focusBorder={colors.inputFocusBorder}
                     disabled={mutation.isPending}
                 />
             </div>

@@ -210,3 +210,33 @@ export const suggestItem = async ({
 
   return res.json();
 };
+
+export const createReview = async ({
+  itemId,
+  rating,
+  content,
+}: {
+  itemId: string;
+  rating: number;
+  content: string;
+}) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      itemId,
+      rating,
+      content,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || 'Error al crear la reseña');
+  }
+
+  return res.json();
+};

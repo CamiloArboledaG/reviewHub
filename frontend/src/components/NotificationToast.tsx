@@ -2,7 +2,7 @@ import React from 'react';
 
 interface NotificationToastProps {
   message: string;
-  variant: 'default' | 'destructive';
+  variant: 'default' | 'destructive' | 'success' | 'error';
   show: boolean;
 }
 
@@ -16,6 +16,8 @@ const NotificationToast: React.FC<NotificationToastProps> = ({ message, variant,
   const variants = {
     default: "bg-foreground text-background",
     destructive: "bg-red-600 text-white",
+    error: "bg-red-600 text-white",
+    success: "bg-green-600 text-white",
   };
 
   return (

@@ -4,6 +4,7 @@ import { Item, Category, ItemsResponse } from '@/lib/definitions';
 import { Search, Loader2, Plus } from 'lucide-react';
 import ItemCard from './ItemCard';
 import { categorySuggestButtonColors } from '@/lib/styles';
+import { CustomInput } from '@/components/ui/custom-input';
 
 interface ItemSearchProps {
     category: Category;
@@ -35,16 +36,15 @@ const ItemSearch: React.FC<ItemSearchProps> = ({
                 <label className="block text-sm font-medium text-gray-700">
                     Buscar {category.name.toLowerCase()}
                 </label>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                        placeholder={`Buscar ${category.name.toLowerCase()}...`}
-                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                    />
-                </div>
+                <CustomInput
+                    type="text"
+                    variant="md"
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange((e.target as HTMLInputElement).value)}
+                    placeholder={`Buscar ${category.name.toLowerCase()}...`}
+                    leftIcon={<Search className="h-5 w-5" />}
+                    focusRing="focus:ring-2 focus:ring-purple-500"
+                />
 
                 {/* Lista de resultados */}
                 <div className="max-h-[400px] overflow-y-auto space-y-2 border border-gray-200 rounded-lg p-2">

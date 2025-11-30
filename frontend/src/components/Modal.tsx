@@ -1,6 +1,7 @@
 'use client';
 
 import { X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -15,14 +16,49 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, description, children, className = '', titleIcon, showBackButton = false, onBack }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const firstFocusable = modalRef.current?.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    firstFocusable?.focus();
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
     <div
       className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center"
       onClick={onClose}
+      role="presentation"
     >
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
         className={`bg-white rounded-lg shadow-lg m-6 w-full max-w-[600px] overflow-hidden ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -55,26 +91,28 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, description, chil
                     </button>
                   )}
                   {titleIcon && <div className="flex-shrink-0">{titleIcon}</div>}
-                  <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
+                  <h2 id="modal-title" className="text-2xl font-semibold text-gray-900">{title}</h2>
                 </div>
               )}
               <button
                 onClick={onClose}
                 className="text-gray-500 hover:text-gray-700 cursor-pointer ml-4 flex-shrink-0"
+                aria-label="Cerrar modal"
               >
                 <X size={24} />
               </button>
             </div>
             {description && (
-              <p className="text-sm text-gray-600 mt-1">{description}</p>
+              <p id="modal-description" className="text-sm text-gray-600 mt-1">{description}</p>
             )}
           </div>
         )}
         {!title && !description && (
           <div className="flex justify-end items-center px-6 pt-6 pb-4">
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="text-gray-500 hover:text-gray-700 cursor-pointer"
+              aria-label="Cerrar modal"
             >
               <X size={24} />
             </button>

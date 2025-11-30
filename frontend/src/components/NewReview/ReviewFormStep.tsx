@@ -7,6 +7,7 @@ import { categoryReviewFormColors, categoryIcons } from '@/lib/styles';
 import { theme } from '@/lib/theme';
 import StarRating from '../StarRating';
 import Image from 'next/image';
+import { CustomInput } from '@/components/ui/custom-input';
 
 interface ReviewFormStepProps {
     category: Category;
@@ -98,14 +99,18 @@ const ReviewFormStep: React.FC<ReviewFormStepProps> = ({ category, item, onSubmi
                         Cuéntanos más <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                        <textarea
+                        <CustomInput
                             id="content"
+                            asTextarea
+                            variant="md"
                             value={content}
-                            onChange={(e) => setContent(e.target.value)}
+                            onChange={(e) => setContent((e.target as HTMLTextAreaElement).value)}
                             placeholder="Comparte tu opinión honesta. ¿Qué te gustó? ¿Qué mejorarías?"
                             rows={5}
                             maxLength={maxChars}
-                            className={`w-full ${theme.input.md} ${colors.inputFocusRing} ${colors.inputFocusBorder} resize-none text-gray-700 placeholder:text-gray-400`}
+                            focusRing={colors.inputFocusRing}
+                            focusBorder={colors.inputFocusBorder}
+                            className="text-gray-700 placeholder:text-gray-400"
                             disabled={isSubmitting}
                         />
                         <div className={`absolute bottom-3 right-3 text-sm ${

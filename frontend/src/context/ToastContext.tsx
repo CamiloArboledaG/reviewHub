@@ -3,7 +3,7 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import NotificationToast from '@/components/NotificationToast';
 
-type ToastVariant = 'default' | 'destructive';
+type ToastVariant = 'default' | 'destructive' | 'success' | 'error';
 
 interface ToastContextType {
   showToast: (message: string, variant?: ToastVariant) => void;

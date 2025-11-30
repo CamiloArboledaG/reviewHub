@@ -1,6 +1,6 @@
 'use client';
 
-import { Heart, MessageCircle, MoreHorizontal, Share2, Star, HelpCircle, User } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Share2, HelpCircle, User } from 'lucide-react';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -8,6 +8,7 @@ import { Category } from '@/lib/definitions';
 import { fetchCategories, followUser, unfollowUser } from '@/lib/queries';
 import { Button } from './ui/button';
 import { categoryIcons, categoryStyles } from '@/lib/styles';
+import StarRating from './StarRating';
 
 type ReviewCardProps = {
   review: {
@@ -73,35 +74,6 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
 
   const handleUnfollow = () => {
     unfollowMutation.mutate();
-  };
-
-
-  const renderStars = () => {
-    const stars = [];
-    const fullStars = Math.floor(rating.value);
-    const halfStar = rating.value % 1 !== 0;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={`full-${i}`} className="w-5 h-5 text-yellow-400 fill-current" />);
-    }
-
-    if (halfStar) {
-        stars.push(
-            <div key="half" className="relative">
-                <Star  className="w-5 h-5 text-gray-300 fill-current" />
-                <div className='absolute top-0 left-0 overflow-hidden w-1/2'>
-                    <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                </div>
-            </div>
-        )
-    }
-
-    const emptyStars = rating.max - Math.ceil(rating.value);
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(<Star key={`empty-${i}`} className="w-5 h-5 text-gray-300 fill-current" />);
-    }
-    
-    return stars;
   };
 
   return (
@@ -177,9 +149,14 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
         </div>
         <div className="flex flex-col">
           <h2 className="text-xl font-bold text-foreground">{item.title}</h2>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="flex">{renderStars()}</div>
-            <span className="font-bold text-lg text-foreground">{rating.value}/{rating.max}</span>
+          <div className="mt-1">
+            <StarRating
+              rating={rating.value}
+              maxRating={rating.max}
+              size="md"
+              interactive={false}
+              showValue={true}
+            />
           </div>
           <p className="mt-2 text-foreground">
             {content}

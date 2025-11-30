@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { CustomInput } from "@/components/ui/custom-input";
 import { Label } from "@/components/ui/label";
 import { registerUser } from '@/lib/queries';
 import { Loader2 } from 'lucide-react';
@@ -83,19 +83,19 @@ const RegisterPage = () => {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="name">Nombre</Label>
-              <Input id="name" placeholder="Tu Nombre" required onChange={handleChange} value={formData.name} disabled={mutation.isPending} />
+              <CustomInput id="name" type="text" variant="md" placeholder="Tu Nombre" required onChange={handleChange} value={formData.name} disabled={mutation.isPending} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="username">Usuario</Label>
-              <Input id="username" placeholder="tu_usuario" required onChange={handleChange} value={formData.username} disabled={mutation.isPending} />
+              <CustomInput id="username" type="text" variant="md" placeholder="tu_usuario" required onChange={handleChange} value={formData.username} disabled={mutation.isPending} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="tu@email.com" required onChange={handleChange} value={formData.email} disabled={mutation.isPending} />
+              <CustomInput id="email" type="email" variant="md" placeholder="tu@email.com" required onChange={handleChange} value={formData.email} disabled={mutation.isPending} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input id="password" type="password" required onChange={handleChange} value={formData.password} disabled={mutation.isPending} />
+              <CustomInput id="password" type="password" variant="md" required onChange={handleChange} value={formData.password} disabled={mutation.isPending} />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">

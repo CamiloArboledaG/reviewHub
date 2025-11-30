@@ -44,14 +44,16 @@ ReviewHub is a full-stack social review platform where users can post and share 
 
 **Core Directories:**
 - `components/` - React components (Header, Sidebar, ReviewCard, Modal, NewReview, AvatarSelector)
-  - `ui/` - shadcn/ui components
+  - `ui/` - shadcn/ui components + CustomInput for centralized input handling
+  - `NewReview/` - Multi-step review creation flow (CategorySelection, ItemSearch, SuggestItemStep, ReviewFormStep)
 - `context/` - React Context providers
   - `AuthContext.tsx` - Global authentication state with login/logout methods
-  - `ToastContext.tsx` - Toast notifications
+  - `ToastContext.tsx` - Toast notifications (supports 'default', 'destructive', 'success', 'error')
 - `lib/` - Utility modules
-  - `queries.ts` - API fetch functions (fetchReviews, loginUser, followUser, etc.)
+  - `queries.ts` - API fetch functions (fetchReviews, loginUser, followUser, searchItems, suggestItem, etc.)
   - `definitions.ts` - TypeScript type definitions
-  - `styles.ts` - Shared style utilities
+  - `styles.ts` - Category-specific style utilities (colors, icons, gradients)
+  - `theme.ts` - Centralized theme tokens (buttons, inputs, radius, spacing, shadows)
   - `utils.ts` - Helper functions
 
 **Data Fetching:**
@@ -110,6 +112,20 @@ npm run lint        # Run ESLint
 - Follow/unfollow endpoints at `/api/users/:id/follow` and `/api/users/:id/unfollow`
 - Following feed filters reviews by followed users
 
+### Image Handling
+- Cloudinary integration for user avatars and item images
+- Avatar selection during registration with default avatars
+- **IMPORTANT:** Item suggestion does NOT allow image upload - admins add images during approval process
+  - Users can only suggest item title and description
+  - Prevents unauthorized image uploads
+  - Admin workflow handles image assignment post-approval
+
+### NewReview Workflow
+1. **Step 1**: Category selection (Games, Movies, Series, Books)
+2. **Step 2**: Item search with debounced query or suggest new item
+3. **Step 3**: (Optional) Suggest item form if item not found
+4. **Step 4**: Review form with star rating and content (250 char limit)
+
 ## Common Development Patterns
 
 ### Adding a New API Endpoint
@@ -128,7 +144,80 @@ npm run lint        # Run ESLint
 - Use `.populate()` for referenced fields (user, item, category)
 - Timestamps are automatically managed with `{ timestamps: true }`
 
+### Using CustomInput Component
+**Location:** `frontend/src/components/ui/custom-input.tsx`
+
+The centralized input component provides consistent styling across the app:
+
+```tsx
+import { CustomInput } from '@/components/ui/custom-input';
+
+// Text input with icon
+<CustomInput
+  type="text"
+  variant="md"  // 'sm' | 'md' | 'lg'
+  placeholder="Search..."
+  leftIcon={<Search className="h-5 w-5" />}
+  focusRing="focus:ring-2 focus:ring-purple-500"
+/>
+
+// Textarea
+<CustomInput
+  asTextarea
+  variant="md"
+  rows={4}
+  placeholder="Write your review..."
+  focusRing={colors.inputFocusRing}
+  focusBorder={colors.inputFocusBorder}
+/>
+```
+
+**Features:**
+- Supports both `input` and `textarea` via `asTextarea` prop
+- Size variants: `sm`, `md`, `lg`
+- Icon support: `leftIcon`, `rightIcon` (auto-adjusts padding)
+- Customizable focus states: `focusRing`, `focusBorder`
+- Consistent border styling (border-2 border-gray-300)
+- Disabled states with proper styling
+
+**DO NOT** use raw `<input>` or `<textarea>` tags. Always use `<CustomInput>` for consistency.
+
+### Toast Notifications
+Use `useToast` hook with these variants:
+- `'default'` - Dark background (general messages)
+- `'success'` - Green background (success operations)
+- `'error'` - Red background (error messages)
+- `'destructive'` - Red background (alias for error)
+
+```tsx
+const { showToast } = useToast();
+showToast('Review created successfully!', 'success');
+showToast('Failed to create review', 'error');
+```
+
 ## Known Issues & TODOs
 
 From README.md:
 - Review query optimization needed: Currently fetching all items is not optimal
+
+## Code Style Guidelines
+
+### NO Unnecessary Comments
+- DO NOT add comments explaining what the code does if the code is self-explanatory
+- Function names, variable names, and structure should make code readable without comments
+- Only add comments for:
+  - Complex business logic that isn't obvious
+  - Workarounds for known issues/bugs
+  - Important architectural decisions
+- Examples of UNNECESSARY comments to AVOID:
+  ```typescript
+  // Set the title  ❌ BAD
+  setTitle(value);
+
+  // Loop through items  ❌ BAD
+  items.map(item => ...)
+
+  // Return the component  ❌ BAD
+  return <div>...</div>
+  ```
+- Code should be self-documenting through clear naming and structure

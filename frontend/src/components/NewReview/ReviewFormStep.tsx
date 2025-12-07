@@ -37,7 +37,7 @@ const ReviewFormStep: React.FC<ReviewFormStepProps> = ({ category, item, onSubmi
     return (
         <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in" key="step4">
             {/* Card del item con diseño mejorado */}
-            <div className={`${colors.cardBg} ${colors.cardBorder} border-2 ${theme.radius.lg} p-5`}>
+            <div className={`${colors.cardBg} ${colors.cardBorder} border-2 ${theme.borders.radius.lg} p-5`}>
                 <div className="flex items-start gap-4 mb-5">
                     {/* Imagen del item o ícono */}
                     {item.imageUrl && !imageError ? (
@@ -129,7 +129,7 @@ const ReviewFormStep: React.FC<ReviewFormStepProps> = ({ category, item, onSubmi
             <button
                 type="submit"
                 disabled={!isValid || isSubmitting}
-                className={`w-full ${theme.button.lg} ${colors.buttonGradient} ${colors.buttonHoverGradient} text-white ${theme.radius.lg} font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${theme.shadow.md} hover:shadow-lg flex items-center justify-center gap-2`}
+                className={`w-full ${theme.componentSpacing.button.lg} ${colors.buttonGradient} ${colors.buttonHoverGradient} text-white ${theme.borders.radius.lg} font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${theme.shadows.scale.md} hover:shadow-lg flex items-center justify-center gap-2`}
             >
                 {isSubmitting ? (
                     <>

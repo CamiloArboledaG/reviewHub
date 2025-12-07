@@ -96,7 +96,7 @@ const SuggestItemStep: React.FC<SuggestItemStepProps> = ({ category, onSuccess }
             {/* Botón de envío */}
             <button
                 type="submit"
-                className={`w-full ${theme.button.lg} ${colors.buttonGradient} ${colors.buttonHoverGradient} text-white ${theme.radius.lg} font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${theme.shadow.md} hover:shadow-lg flex items-center justify-center gap-2`}
+                className={`w-full ${theme.componentSpacing.button.lg} ${colors.buttonGradient} ${colors.buttonHoverGradient} text-white ${theme.borders.radius.lg} font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${theme.shadows.scale.md} hover:shadow-lg flex items-center justify-center gap-2`}
                 disabled={mutation.isPending}
             >
                 {mutation.isPending ? (

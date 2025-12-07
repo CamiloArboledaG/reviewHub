@@ -10,9 +10,11 @@ import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
-import { categoryIcons, categoryBadgeColors } from '@/lib/styles';
+import { categoryIcons } from '@/lib/styles';
 import StarRating from './StarRating';
 import { useToast } from '@/context/ToastContext';
+import { theme } from '@/lib/theme';
+import { getCategoryBadgeClasses } from '@/lib/theme/index';
 
 type ReviewCardProps = {
   review: {
@@ -133,13 +135,15 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
     unfollowMutation.mutate();
   };
 
+  const rc = theme.components.reviewCard;
+
   return (
-    <Card className="overflow-hidden border-border/50 bg-card shadow-sm hover:shadow-md transition-shadow duration-300 w-full max-w-2xl">
+    <Card className={`${rc.container.overflow} ${rc.container.border} ${rc.container.background} ${rc.container.shadow} ${rc.container.transition} ${rc.container.base}`}>
       <CardContent className="p-0">
         {/* Header */}
-        <div className="flex items-start justify-between p-4 pb-3">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-11 w-11 ring-2 ring-border">
+        <div className={rc.header.container}>
+          <div className={rc.header.userSection}>
+            <Avatar className={`${rc.avatar.size} ${rc.avatar.ring}`}>
               {user.avatar?.imageUrl && !avatarError ? (
                 <AvatarImage
                   src={user.avatar.imageUrl}
@@ -147,34 +151,34 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
                   onError={() => setAvatarError(true)}
                 />
               ) : (
-                <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                <AvatarFallback className={`${rc.avatar.fallback.background} ${rc.avatar.fallback.text}`}>
                   {user.name.charAt(0)}
                 </AvatarFallback>
               )}
             </Avatar>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-foreground">{user.name}</span>
-                <span className="text-muted-foreground text-sm">@{user.handle}</span>
-                <span className="text-muted-foreground/60 text-sm">·</span>
-                <span className="text-muted-foreground/60 text-sm">{postTime}</span>
+            <div className={rc.userInfo.container}>
+              <div className={rc.userInfo.nameRow}>
+                <span className={rc.userInfo.name}>{user.name}</span>
+                <span className={rc.userInfo.handle}>@{user.handle}</span>
+                <span className={rc.userInfo.separator}>·</span>
+                <span className={rc.userInfo.timestamp}>{postTime}</span>
               </div>
               {currentCategory ? (
-                <Badge className={`w-fit mt-1 gap-1.5 text-xs font-normal px-2 py-0.5 border ${categoryBadgeColors[currentCategory.slug]}`}>
-                  {React.createElement(categoryIcons[currentCategory.slug], { className: 'h-3 w-3' })}
+                <Badge className={`${rc.badge.container} ${getCategoryBadgeClasses(currentCategory.slug)}`}>
+                  {React.createElement(categoryIcons[currentCategory.slug], { className: rc.badge.icon })}
                   {currentCategory.name}
                 </Badge>
               ) : (
-                <div className="h-5 w-24 bg-muted rounded-full animate-pulse mt-1" />
+                <div className={rc.badge.skeleton} />
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className={rc.header.actionsSection}>
             {isFollowing ? (
               <Button
                 variant="secondary"
                 size="sm"
-                className="rounded-full h-8 px-4 text-xs font-medium"
+                className={rc.followButton.base}
                 onClick={handleUnfollow}
                 disabled={unfollowMutation.isPending}
               >
@@ -183,25 +187,25 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
             ) : (
               <Button
                 size="sm"
-                className="rounded-full h-8 px-4 text-xs font-medium"
+                className={rc.followButton.base}
                 onClick={handleFollow}
                 disabled={followMutation.isPending}
               >
                 {followMutation.isPending ? 'Siguiendo...' : 'Seguir'}
               </Button>
             )}
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-              <MoreHorizontal className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className={rc.moreButton.base}>
+              <MoreHorizontal className={rc.moreButton.icon} />
             </Button>
           </div>
         </div>
 
         {/* Item Content */}
-        <div className="px-4 pb-4">
-          <div className="flex gap-4 p-4 rounded-xl bg-muted/50 border border-border/50">
+        <div className={rc.content.container}>
+          <div className={rc.content.box}>
             {/* Item Cover */}
-            <div className="flex-shrink-0">
-              <div className="relative w-20 h-28 rounded-lg overflow-hidden shadow-lg ring-1 ring-black/5">
+            <div className={rc.cover.container}>
+              <div className={rc.cover.image}>
                 {item.imageUrl && !itemImageError ? (
                   <Image
                     src={item.imageUrl}
@@ -212,21 +216,21 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
                     onError={() => setItemImageError(true)}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                    <User className="h-8 w-8 text-gray-400" />
+                  <div className={rc.cover.placeholder}>
+                    <User className={rc.cover.placeholderIcon} />
                   </div>
                 )}
               </div>
             </div>
 
             {/* Item Info & Review */}
-            <div className="flex-1 min-w-0 flex flex-col gap-2">
+            <div className={rc.itemInfo.container}>
               <div>
-                <h3 className="font-semibold text-foreground text-base leading-tight line-clamp-1">
+                <h3 className={rc.itemInfo.title}>
                   {item.title}
                 </h3>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className={rc.itemInfo.ratingContainer}>
                 <StarRating
                   rating={rating.value}
                   maxRating={rating.max}
@@ -235,7 +239,7 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
                   showValue={true}
                 />
               </div>
-              <p className="text-sm text-foreground/90 leading-relaxed line-clamp-2">
+              <p className={rc.itemInfo.reviewText}>
                 {content}
               </p>
             </div>
@@ -243,31 +247,31 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-border/50">
-          <div className="flex items-center gap-1">
+        <div className={rc.actions.container}>
+          <div className={rc.actions.leftGroup}>
             <Button
               variant="ghost"
               size="sm"
-              className="gap-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-full h-9 px-3"
+              className={`${rc.actions.button.base} ${rc.actions.button.like}`}
             >
-              <Heart className="h-[18px] w-[18px]" />
-              <span className="text-sm font-medium">{likes}</span>
+              <Heart className={rc.actions.button.icon} />
+              <span className={theme.typographyPresets.cardMeta}>{likes}</span>
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="gap-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full h-9 px-3"
+              className={`${rc.actions.button.base} ${rc.actions.button.comment}`}
             >
-              <MessageCircle className="h-[18px] w-[18px]" />
-              <span className="text-sm font-medium">{comments}</span>
+              <MessageCircle className={rc.actions.button.icon} />
+              <span className={theme.typographyPresets.cardMeta}>{comments}</span>
             </Button>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full h-9 px-3"
+            className={`${rc.actions.button.base} ${rc.actions.button.share}`}
           >
-            <Share2 className="h-[18px] w-[18px]" />
+            <Share2 className={rc.actions.button.icon} />
           </Button>
         </div>
       </CardContent>

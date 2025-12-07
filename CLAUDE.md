@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ReviewHub is a full-stack social review platform where users can post and share reviews for games, movies, series, and books. The project is split into a Next.js frontend and Express.js backend, with MongoDB as the database.
+Blurbit is a full-stack social review platform where users can post and share reviews for games, movies, series, and books. The project is split into a Next.js frontend and Express.js backend, with MongoDB as the database.
 
 ## Architecture
 

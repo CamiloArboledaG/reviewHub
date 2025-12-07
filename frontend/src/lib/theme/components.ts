@@ -288,8 +288,112 @@ export const avatar = {
     none: '',
     default: 'ring-2 ring-border',
     primary: 'ring-2 ring-primary',
+    violet: 'ring-2 ring-violet-500/20 hover:ring-violet-500/40',
   },
 
   // Fallback
   fallback: 'flex h-full w-full items-center justify-center rounded-full bg-muted',
+} as const;
+
+/**
+ * Sidebar Component Tokens
+ */
+export const sidebar = {
+  // Container
+  container: {
+    base: 'fixed left-0 top-16 z-40 w-64',
+    height: 'h-[calc(100vh-4rem)]',
+    border: 'border-r border-border/40',
+    background: 'bg-background',
+  },
+
+  // Scroll Area
+  scroll: {
+    base: 'h-full py-6',
+  },
+
+  // Content Wrapper
+  content: {
+    base: 'px-4 space-y-6',
+  },
+
+  // Navigation Section
+  nav: {
+    container: 'space-y-1',
+    button: {
+      base: 'w-full justify-start gap-3 h-11 px-4 font-medium transition-all',
+      active: 'bg-violet-500/10 text-violet-600 hover:bg-violet-500/15',
+      inactive: 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+      icon: 'h-5 w-5',
+      iconActive: 'text-violet-500',
+    },
+  },
+
+  // Categories Section
+  categories: {
+    container: 'space-y-3',
+    header: 'px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70',
+    nav: 'space-y-1',
+    button: {
+      base: 'w-full justify-start gap-3 h-10 px-4 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all',
+      icon: 'h-5 w-5',
+      label: 'font-medium',
+    },
+  },
+
+  // Separator
+  separator: 'bg-border/50',
+
+  // Category Colors
+  categoryColors: {
+    game: 'text-emerald-500',
+    movie: 'text-rose-500',
+    series: 'text-sky-500',
+    book: 'text-amber-500',
+  },
+} as const;
+
+/**
+ * Header Component Tokens
+ */
+export const header = {
+  // Container
+  container: {
+    base: 'sticky top-0 z-50 w-full',
+    border: 'border-b border-border/40',
+    background: 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60',
+  },
+
+  // Inner wrapper
+  inner: {
+    base: 'flex h-16 items-center justify-between px-6',
+  },
+
+  // Logo
+  logo: {
+    container: 'flex items-center gap-2',
+    text: 'text-xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent',
+  },
+
+  // Search
+  search: {
+    container: 'flex-1 max-w-md mx-8',
+    wrapper: 'relative',
+    icon: 'absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground',
+    input: 'pl-10 h-10 bg-muted/50 border-transparent focus:border-border focus:bg-background transition-colors rounded-full',
+  },
+
+  // Actions
+  actions: {
+    container: 'flex items-center gap-2',
+    button: 'h-10 w-10 rounded-full text-muted-foreground hover:text-foreground',
+    icon: 'h-5 w-5',
+  },
+
+  // Avatar (in header)
+  avatar: {
+    size: 'h-9 w-9',
+    ring: 'ring-2 ring-violet-500/20 cursor-pointer hover:ring-violet-500/40 transition-all',
+    fallback: 'bg-gradient-to-br from-violet-500 to-purple-600 text-white font-medium text-sm',
+  },
 } as const;

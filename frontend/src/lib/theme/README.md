@@ -1,4 +1,4 @@
-# ReviewHub Design System
+# Blurbit Design System
 
 Sistema centralizado de design tokens para mantener consistencia visual y facilitar el mantenimiento de estilos en toda la aplicación.
 

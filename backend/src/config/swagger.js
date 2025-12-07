@@ -4,11 +4,11 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'ReviewHub API',
+      title: 'Blurbit API',
       version: '1.0.0',
-      description: 'API para ReviewHub - Plataforma de reseñas sociales para juegos, películas, series y libros',
+      description: 'API para Blurbit - Plataforma de reseñas sociales para juegos, películas, series y libros',
       contact: {
-        name: 'ReviewHub Team',
+        name: 'Blurbit Team',
       },
     },
     servers: [

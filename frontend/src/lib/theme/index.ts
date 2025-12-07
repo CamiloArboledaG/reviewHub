@@ -1,7 +1,7 @@
 /**
  * Design System - Theme Index
  *
- * Sistema centralizado de design tokens para ReviewHub
+ * Sistema centralizado de design tokens para Blurbit
  *
  * Este archivo exporta todos los tokens de diseño utilizados en la aplicación.
  * Centralizar estos valores facilita el mantenimiento y garantiza consistencia.

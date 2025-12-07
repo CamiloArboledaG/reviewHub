@@ -20,7 +20,7 @@ app.use(cookieParser())
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'ReviewHub API Docs'
+  customSiteTitle: 'Blurbit API Docs'
 }))
 
 // Importar y usar rutas

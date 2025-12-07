@@ -3,75 +3,82 @@
 import { Bell, LogOut, Search } from 'lucide-react';
 import React from 'react';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import Image from 'next/image';
-import { CustomInput } from './ui/custom-input';
+import { theme } from '@/lib/theme';
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const { header: h } = theme.components;
 
   return (
-    <header className="bg-card border-b border-border fixed top-0 left-0 right-0 z-10">
-      <div className="flex justify-between items-center h-16 px-4 sm:px-6">
-        <div className="flex items-center">
+    <header className={`${h.container.base} ${h.container.border} ${h.container.background}`}>
+      <div className={h.inner.base}>
+        {/* Logo */}
+        <div className={h.logo.container}>
           <Link href="/home">
-            <h1 className="text-2xl font-bold text-purple-800">ReviewHub</h1>
+            <span className={h.logo.text}>
+              Blurbit
+            </span>
           </Link>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="w-full max-w-md">
-            <label htmlFor="search" className="sr-only">
-              Buscar
-            </label>
-            <CustomInput
-              id="search"
-              name="search"
-              type="search"
-              variant="sm"
-              placeholder="Buscar reseñas, usuarios, contenido..."
-              leftIcon={<Search className="h-5 w-5" />}
-              focusRing="focus:ring-1 focus:ring-ring"
-              focusBorder="focus:border-ring"
-              className="bg-card placeholder-muted-foreground focus:placeholder-gray-400"
-            />
+
+        {/* Search Bar */}
+        {isAuthenticated && (
+          <div className={h.search.container}>
+            <div className={h.search.wrapper}>
+              <Search className={h.search.icon} />
+              <Input
+                placeholder="Buscar reseñas, usuarios, o títulos..."
+                className={h.search.input}
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            {isAuthenticated ? (
-              <>
-                  <Button variant="ghost" className="p-2 rounded-full hover:bg-accent">
-                    <Bell className="h-6 w-6 text-foreground" />
-                  </Button>
-                  <Button variant="ghost" className="p-2 rounded-full hover:bg-accent">
-                    <div className="w-6 h-6 relative">
-                      {user?.avatar?.imageUrl ? (
-                        <Image
-                          src={user.avatar.imageUrl}
-                          alt={user?.name || 'avatar'}
-                          width={38}
-                          height={38}
-                          className="rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 rounded-full" />
-                      )}
-                    </div>
-                  </Button>
-                  <Button variant="ghost" className="p-2 rounded-full hover:bg-accent" onClick={logout}>
-                    <LogOut className="h-6 w-6 text-foreground" />
-                  </Button>
-              </>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button>Iniciar Sesión</Button>
-                </Link>
-                <Link href="/register">
-                  <Button variant="secondary">Registrarse</Button>
-                </Link>
-              </>
-            )}
-          </div>
+        )}
+
+        {/* Right Actions */}
+        <div className={h.actions.container}>
+          {isAuthenticated ? (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={h.actions.button}
+              >
+                <Bell className={h.actions.icon} />
+              </Button>
+
+              <Avatar className={`${h.avatar.size} ${h.avatar.ring}`}>
+                <AvatarImage
+                  src={user?.avatar?.imageUrl || "/placeholder.svg"}
+                  alt={user?.name || "Usuario"}
+                />
+                <AvatarFallback className={h.avatar.fallback}>
+                  {user?.name?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className={h.actions.button}
+                onClick={logout}
+              >
+                <LogOut className={h.actions.icon} />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link href="/login">
+                <Button>Iniciar Sesión</Button>
+              </Link>
+              <Link href="/register">
+                <Button variant="secondary">Registrarse</Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

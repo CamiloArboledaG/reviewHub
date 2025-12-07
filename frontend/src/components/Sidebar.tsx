@@ -1,12 +1,11 @@
 'use client';
 
-import { Book, Film, Gamepad2, Home, Tv, Users, TrendingUp, LucideIcon } from 'lucide-react';
-import React, { useState } from 'react';
+import { Book, Film, Gamepad2, Home, Tv, Users, LucideIcon } from 'lucide-react';
+import React from 'react';
 import { Skeleton } from './ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { Category } from '@/lib/definitions';
 import { fetchCategories } from '@/lib/queries';
-import NotificationToast from './NotificationToast';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -18,8 +17,6 @@ const categoryIcons: { [key: string]: LucideIcon } = {
 };
 
 const Sidebar = () => {
-  const [toastConfig, setToastConfig] = useState({ show: false, message: '', variant: 'default' as 'default' | 'destructive' });
-  
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -32,13 +29,6 @@ const Sidebar = () => {
     initialData: [],
   });
 
-  const handleTrendsClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    setToastConfig({ show: true, message: 'Próximamente...', variant: 'default' });
-    setTimeout(() => {
-      setToastConfig({ show: false, message: '', variant: 'default' });
-    }, 2000);
-  };
 
   const handleCategoryClick = (e: React.MouseEvent<HTMLAnchorElement>, categorySlug: string) => {
     e.preventDefault();
@@ -58,12 +48,6 @@ const Sidebar = () => {
   };
 
   return (
-    <>
-      <NotificationToast 
-        show={toastConfig.show} 
-        message={toastConfig.message} 
-        variant={toastConfig.variant} 
-      />
       <aside className="w-64 flex-shrink-0 px-4 py-8 bg-card border-r border-border fixed top-16 h-[calc(100vh-4rem)]" data-view={(pathname === '/following') ? 'following' : (selectedCategories.length > 0 ? 'home_with_categories' : 'home')}>
         <div className="flex flex-col gap-8">
           <div>
@@ -119,7 +103,6 @@ const Sidebar = () => {
           </div>
         </div>
       </aside>
-    </>
   );
 };
 

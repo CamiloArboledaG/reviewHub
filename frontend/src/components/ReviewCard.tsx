@@ -1,13 +1,16 @@
 'use client';
 
-import { Heart, MessageCircle, MoreHorizontal, Share2, HelpCircle, User } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Share2, User } from 'lucide-react';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Category, InfiniteReviewsData } from '@/lib/definitions';
 import { fetchCategories, followUser, unfollowUser } from '@/lib/queries';
 import { Button } from './ui/button';
-import { categoryIcons, categoryStyles } from '@/lib/styles';
+import { Card, CardContent } from './ui/card';
+import { Badge } from './ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { categoryIcons, categoryBadgeColors } from '@/lib/styles';
 import StarRating from './StarRating';
 import { useToast } from '@/context/ToastContext';
 
@@ -131,107 +134,144 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
   };
 
   return (
-    <div className="bg-card rounded-lg shadow-sm border border-border p-6 w-full max-w-2xl">
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden relative">
-            {user.avatar?.imageUrl && !avatarError ? (
-              <Image
-                src={user.avatar.imageUrl}
-                alt={user.name}
-                fill
-                sizes="48px"
-                className="object-cover rounded-full"
-                onError={() => setAvatarError(true)}
-                placeholder="blur"
-                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjZTVlN2ViIi8+PC9zdmc+"
-              />
-            ) : (
-              <User className="h-6 w-6 text-gray-400" />
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-foreground">{user.name}</h3>
-              <span className="text-muted-foreground text-sm">@{user.handle}</span>
-              <span className="text-muted-foreground text-sm">· {postTime}</span>
+    <Card className="overflow-hidden border-border/50 bg-card shadow-sm hover:shadow-md transition-shadow duration-300 w-full max-w-2xl">
+      <CardContent className="p-0">
+        {/* Header */}
+        <div className="flex items-start justify-between p-4 pb-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-11 w-11 ring-2 ring-border">
+              {user.avatar?.imageUrl && !avatarError ? (
+                <AvatarImage
+                  src={user.avatar.imageUrl}
+                  alt={user.name}
+                  onError={() => setAvatarError(true)}
+                />
+              ) : (
+                <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                  {user.name.charAt(0)}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-foreground">{user.name}</span>
+                <span className="text-muted-foreground text-sm">@{user.handle}</span>
+                <span className="text-muted-foreground/60 text-sm">·</span>
+                <span className="text-muted-foreground/60 text-sm">{postTime}</span>
+              </div>
+              {currentCategory ? (
+                <Badge className={`w-fit mt-1 gap-1.5 text-xs font-normal px-2 py-0.5 border ${categoryBadgeColors[currentCategory.slug]}`}>
+                  {React.createElement(categoryIcons[currentCategory.slug], { className: 'h-3 w-3' })}
+                  {currentCategory.name}
+                </Badge>
+              ) : (
+                <div className="h-5 w-24 bg-muted rounded-full animate-pulse mt-1" />
+              )}
             </div>
-            <div className="mt-1">
-            {currentCategory ? (
-                <span className={`inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-medium ${categoryStyles[currentCategory.slug]}`}>
-                {React.createElement(categoryIcons[currentCategory.slug], { className: 'w-3 h-3' })}
-                {currentCategory.name}
-                </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {isFollowing ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="rounded-full h-8 px-4 text-xs font-medium"
+                onClick={handleUnfollow}
+                disabled={unfollowMutation.isPending}
+              >
+                {unfollowMutation.isPending ? 'Dejando...' : 'Siguiendo'}
+              </Button>
             ) : (
-                <div className="h-5 w-24 bg-muted rounded-full animate-pulse" />
+              <Button
+                size="sm"
+                className="rounded-full h-8 px-4 text-xs font-medium"
+                onClick={handleFollow}
+                disabled={followMutation.isPending}
+              >
+                {followMutation.isPending ? 'Siguiendo...' : 'Seguir'}
+              </Button>
             )}
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Item Content */}
+        <div className="px-4 pb-4">
+          <div className="flex gap-4 p-4 rounded-xl bg-muted/50 border border-border/50">
+            {/* Item Cover */}
+            <div className="flex-shrink-0">
+              <div className="relative w-20 h-28 rounded-lg overflow-hidden shadow-lg ring-1 ring-black/5">
+                {item.imageUrl && !itemImageError ? (
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.title}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                    onError={() => setItemImageError(true)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <User className="h-8 w-8 text-gray-400" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Item Info & Review */}
+            <div className="flex-1 min-w-0 flex flex-col gap-2">
+              <div>
+                <h3 className="font-semibold text-foreground text-base leading-tight line-clamp-1">
+                  {item.title}
+                </h3>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <StarRating
+                  rating={rating.value}
+                  maxRating={rating.max}
+                  size="sm"
+                  interactive={false}
+                  showValue={true}
+                />
+              </div>
+              <p className="text-sm text-foreground/90 leading-relaxed line-clamp-2">
+                {content}
+              </p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-            {isFollowing ? (
-                 <Button className="px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-full" onClick={handleUnfollow} disabled={unfollowMutation.isPending}>
-                    {unfollowMutation.isPending ? 'Dejando de seguir...' : 'Siguiendo'}
-                </Button>
-            ) : (
-                <Button className="px-4 py-2 text-sm font-semibold text-foreground bg-card border border-border rounded-full hover:bg-accent" onClick={handleFollow} disabled={followMutation.isPending}>
-                    {followMutation.isPending ? 'Siguiendo...' : 'Seguir'}
-                </Button>
-            )}
-          
-          <Button variant="ghost" className="p-2 rounded-full hover:bg-accent">
-            <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+
+        {/* Actions */}
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border/50">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-full h-9 px-3"
+            >
+              <Heart className="h-[18px] w-[18px]" />
+              <span className="text-sm font-medium">{likes}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full h-9 px-3"
+            >
+              <MessageCircle className="h-[18px] w-[18px]" />
+              <span className="text-sm font-medium">{comments}</span>
+            </Button>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full h-9 px-3"
+          >
+            <Share2 className="h-[18px] w-[18px]" />
           </Button>
         </div>
-      </div>
-      <div className="mt-4 flex gap-6">
-        <div className="w-32 h-40 bg-gray-200 rounded-md flex-shrink-0 flex items-center justify-center overflow-hidden relative">
-          {item.imageUrl && !itemImageError ? (
-            <Image
-              src={item.imageUrl}
-              alt={item.title}
-              fill
-              sizes="128px"
-              className="object-cover rounded-md"
-              onError={() => setItemImageError(true)}
-              placeholder="blur"
-              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2U1ZTdlYiIvPjwvc3ZnPg=="
-            />
-          ) : (
-            <HelpCircle className="h-12 w-12 text-gray-400" />
-          )}
-        </div>
-        <div className="flex flex-col">
-          <h2 className="text-xl font-bold text-foreground">{item.title}</h2>
-          <div className="mt-1">
-            <StarRating
-              rating={rating.value}
-              maxRating={rating.max}
-              size="md"
-              interactive={false}
-              showValue={true}
-            />
-          </div>
-          <p className="mt-2 text-foreground">
-            {content}
-          </p>
-        </div>
-      </div>
-      <div className="mt-4 pt-4 border-t border-border flex items-center gap-6 text-muted-foreground">
-        <Button variant="ghost-icon" className="gap-2 hover:text-red-500 p-0">
-          <Heart className="w-5 h-5" />
-          <span>{likes}</span>
-        </Button>
-        <Button variant="ghost-icon" className="gap-2 hover:text-blue-500 p-0">
-          <MessageCircle className="w-5 h-5" />
-          <span>{comments}</span>
-        </Button>
-        <div className="flex-grow"></div>
-        <Button variant="ghost-icon" className="hover:text-foreground p-0">
-          <Share2 className="w-5 h-5" />
-        </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

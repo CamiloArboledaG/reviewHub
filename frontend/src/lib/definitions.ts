@@ -41,6 +41,7 @@ export type Review = {
   };
   likes: number;
   comments: string[];
+  isFollowing?: boolean;
 };
 
 export type ReviewsPage = {
@@ -49,6 +50,11 @@ export type ReviewsPage = {
   totalPages: number;
   totalReviews: number;
   hasNextPage: boolean;
+};
+
+export type InfiniteReviewsData = {
+  pages: ReviewsPage[];
+  pageParams: number[];
 };
 
 export type LoginCredentials = {

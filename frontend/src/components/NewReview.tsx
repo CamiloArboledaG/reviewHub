@@ -166,7 +166,10 @@ const NewReview = () => {
     const reviewMutation = useMutation({
         mutationFn: createReview,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['reviews'] });
+            queryClient.refetchQueries({
+                queryKey: ['reviews'],
+                type: 'active'
+            });
             showToast('¡Reseña publicada exitosamente!', 'success');
             closeModal();
         },

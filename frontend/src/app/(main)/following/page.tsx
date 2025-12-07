@@ -6,9 +6,11 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User } from "@/lib/definitions";
+import { useToast } from "@/context/ToastContext";
 
 export default function FollowingPage() {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   const { data, isLoading, isError, error } = useQuery<FollowingResponse>({
     queryKey: ["following"],
@@ -30,13 +32,11 @@ export default function FollowingPage() {
       });
       return { previous };
     },
-    onError: (_err, _variables, context) => {
+    onError: (err, _variables, context) => {
       if (context?.previous) {
         queryClient.setQueryData(["following"], context.previous);
       }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["following"] });
+      showToast(err.message || 'Error al dejar de seguir al usuario', 'error');
     },
   });
 

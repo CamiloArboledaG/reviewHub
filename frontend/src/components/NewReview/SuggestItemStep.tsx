@@ -20,6 +20,7 @@ const SuggestItemStep: React.FC<SuggestItemStepProps> = ({ category, onSuccess }
     const [description, setDescription] = useState('');
     const { showToast } = useToast();
     const colors = categoryReviewFormColors[category.slug];
+    const si = theme.components.newReview.suggestItem;
 
     const mutation = useMutation({
         mutationFn: suggestItem,
@@ -48,23 +49,22 @@ const SuggestItemStep: React.FC<SuggestItemStepProps> = ({ category, onSuccess }
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in" key="step3">
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
-                <p className="text-sm text-amber-800">
+        <form onSubmit={handleSubmit} className={si.container} key="step3">
+            <div className={si.warningBox}>
+                <p className={si.warningText}>
                     <strong>Nota:</strong> Tu sugerencia será revisada por un administrador antes de ser publicada.
                     La imagen será agregada durante el proceso de aprobación.
                 </p>
             </div>
 
-            {/* Título */}
             <div>
-                <label htmlFor="title" className="block text-sm font-bold text-gray-900 mb-2">
-                    Título <span className="text-red-500">*</span>
+                <label htmlFor="title" className={si.label}>
+                    Título <span className={si.required}>*</span>
                 </label>
                 <CustomInput
                     id="title"
                     type="text"
-                    variant="md"
+                    variant="sm"
                     value={title}
                     onChange={(e) => setTitle((e.target as HTMLInputElement).value)}
                     placeholder={`Nombre del ${category.name.toLowerCase().slice(0, -1)}`}
@@ -74,15 +74,14 @@ const SuggestItemStep: React.FC<SuggestItemStepProps> = ({ category, onSuccess }
                 />
             </div>
 
-            {/* Descripción */}
             <div>
-                <label htmlFor="description" className="block text-sm font-bold text-gray-900 mb-2">
-                    Descripción <span className="text-red-500">*</span>
+                <label htmlFor="description" className={si.label}>
+                    Descripción <span className={si.required}>*</span>
                 </label>
                 <CustomInput
                     id="description"
                     asTextarea
-                    variant="md"
+                    variant="sm"
                     value={description}
                     onChange={(e) => setDescription((e.target as HTMLTextAreaElement).value)}
                     placeholder={`Describe el ${category.name.toLowerCase().slice(0, -1)}`}
@@ -93,20 +92,19 @@ const SuggestItemStep: React.FC<SuggestItemStepProps> = ({ category, onSuccess }
                 />
             </div>
 
-            {/* Botón de envío */}
             <button
                 type="submit"
-                className={`w-full ${theme.componentSpacing.button.lg} ${colors.buttonGradient} ${colors.buttonHoverGradient} text-white ${theme.borders.radius.lg} font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${theme.shadows.scale.md} hover:shadow-lg flex items-center justify-center gap-2`}
+                className={`${si.submitButton.base} ${theme.componentSpacing.button.lg} ${colors.buttonGradient} ${colors.buttonHoverGradient} text-white ${theme.borders.radius.lg} ${theme.shadows.scale.md} hover:shadow-lg`}
                 disabled={mutation.isPending}
             >
                 {mutation.isPending ? (
                     <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <Loader2 className={si.submitButton.icon} />
                         <span>Enviando...</span>
                     </>
                 ) : (
                     <>
-                        <Plus className="w-5 h-5" />
+                        <Plus className={si.submitButton.icon} />
                         <span>Sugerir {category.name.toLowerCase().slice(0, -1)}</span>
                     </>
                 )}

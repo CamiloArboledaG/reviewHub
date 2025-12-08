@@ -45,7 +45,7 @@ const LoginPage = () => {
               <CustomInput
                 id="username"
                 type="text"
-                variant="md"
+                variant="sm"
                 placeholder="tu_usuario"
                 required
                 value={username}
@@ -58,7 +58,7 @@ const LoginPage = () => {
               <CustomInput
                 id="password"
                 type="password"
-                variant="md"
+                variant="sm"
                 required
                 value={password}
                 onChange={(e) => setPassword((e.target as HTMLInputElement).value)}

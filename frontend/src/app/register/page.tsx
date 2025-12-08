@@ -83,19 +83,19 @@ const RegisterPage = () => {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="name">Nombre</Label>
-              <CustomInput id="name" type="text" variant="md" placeholder="Tu Nombre" required onChange={handleChange} value={formData.name} disabled={mutation.isPending} />
+              <CustomInput id="name" type="text" variant="sm" placeholder="Tu Nombre" required onChange={handleChange} value={formData.name} disabled={mutation.isPending} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="username">Usuario</Label>
-              <CustomInput id="username" type="text" variant="md" placeholder="tu_usuario" required onChange={handleChange} value={formData.username} disabled={mutation.isPending} />
+              <CustomInput id="username" type="text" variant="sm" placeholder="tu_usuario" required onChange={handleChange} value={formData.username} disabled={mutation.isPending} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <CustomInput id="email" type="email" variant="md" placeholder="tu@email.com" required onChange={handleChange} value={formData.email} disabled={mutation.isPending} />
+              <CustomInput id="email" type="email" variant="sm" placeholder="tu@email.com" required onChange={handleChange} value={formData.email} disabled={mutation.isPending} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Contraseña</Label>
-              <CustomInput id="password" type="password" variant="md" required onChange={handleChange} value={formData.password} disabled={mutation.isPending} />
+              <CustomInput id="password" type="password" variant="sm" required onChange={handleChange} value={formData.password} disabled={mutation.isPending} />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">

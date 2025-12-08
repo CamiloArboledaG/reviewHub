@@ -24,6 +24,7 @@ const ReviewFormStep: React.FC<ReviewFormStepProps> = ({ category, item, onSubmi
     const maxChars = 250;
     const colors = categoryReviewFormColors[category.slug];
     const CategoryIcon = categoryIcons[category.slug];
+    const rf = theme.components.newReview.reviewForm;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,13 +36,11 @@ const ReviewFormStep: React.FC<ReviewFormStepProps> = ({ category, item, onSubmi
     const isValid = rating > 0 && content.trim().length > 0 && content.trim().length <= maxChars;
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in" key="step4">
-            {/* Card del item con diseño mejorado */}
-            <div className={`${colors.cardBg} ${colors.cardBorder} border-2 ${theme.borders.radius.lg} p-5`}>
+        <form onSubmit={handleSubmit} className={rf.container} key="step4">
+            <div className={`${rf.itemCard.container} ${colors.cardBg} ${colors.cardBorder} ${theme.borders.radius.lg}`}>
                 <div className="flex items-start gap-4 mb-5">
-                    {/* Imagen del item o ícono */}
                     {item.imageUrl && !imageError ? (
-                        <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 relative">
+                        <div className={rf.itemCard.imageContainer}>
                             <Image
                                 src={item.imageUrl}
                                 alt={item.title}
@@ -52,25 +51,24 @@ const ReviewFormStep: React.FC<ReviewFormStepProps> = ({ category, item, onSubmi
                             />
                         </div>
                     ) : (
-                        <div className={`${colors.iconBg} ${colors.iconColor} w-20 h-20 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md`}>
+                        <div className={`${rf.itemCard.iconContainer} ${colors.iconBg} ${colors.iconColor}`}>
                             {imageError ? (
-                                <HelpCircle className="w-10 h-10" />
+                                <HelpCircle className={rf.itemCard.icon} />
                             ) : (
-                                <CategoryIcon className="w-10 h-10" />
+                                <CategoryIcon className={rf.itemCard.icon} />
                             )}
                         </div>
                     )}
 
-                    {/* Info del item */}
-                    <div className="flex-1 min-w-0">
-                        <h3 className="text-xl font-bold text-gray-900 mb-1">{item.title}</h3>
-                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.description}</p>
-                        <div className="flex items-center gap-2">
-                            <span className={`inline-block px-3 py-1 ${colors.badge} ${colors.badgeText} text-xs font-medium rounded-full`}>
+                    <div className={rf.itemCard.content}>
+                        <h3 className={rf.itemCard.title}>{item.title}</h3>
+                        <p className={rf.itemCard.description}>{item.description}</p>
+                        <div className={rf.itemCard.badgeContainer}>
+                            <span className={`${rf.itemCard.badge} ${colors.badge} ${colors.badgeText}`}>
                                 {category.name}
                             </span>
                             {item.status === 'pending' && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                <span className={rf.itemCard.pendingBadge}>
                                     Pendiente de aprobación
                                 </span>
                             )}
@@ -78,10 +76,9 @@ const ReviewFormStep: React.FC<ReviewFormStepProps> = ({ category, item, onSubmi
                     </div>
                 </div>
 
-                {/* Rating */}
-                <div className="mb-5">
-                    <label className="block text-sm font-bold text-gray-900 mb-3">
-                        ¿Qué te pareció? <span className="text-red-500">*</span>
+                <div className={rf.ratingSection.container}>
+                    <label className={rf.ratingSection.label}>
+                        ¿Qué te pareció? <span className={rf.ratingSection.required}>*</span>
                     </label>
                     <StarRating
                         rating={rating}
@@ -93,16 +90,15 @@ const ReviewFormStep: React.FC<ReviewFormStepProps> = ({ category, item, onSubmi
                     />
                 </div>
 
-                {/* Contenido de la reseña */}
                 <div>
-                    <label htmlFor="content" className="block text-sm font-bold text-gray-900 mb-2">
-                        Cuéntanos más <span className="text-red-500">*</span>
+                    <label htmlFor="content" className={rf.contentSection.label}>
+                        Cuéntanos más <span className={rf.ratingSection.required}>*</span>
                     </label>
-                    <div className="relative">
+                    <div className={rf.contentSection.textareaWrapper}>
                         <CustomInput
                             id="content"
                             asTextarea
-                            variant="md"
+                            variant="sm"
                             value={content}
                             onChange={(e) => setContent((e.target as HTMLTextAreaElement).value)}
                             placeholder="Comparte tu opinión honesta. ¿Qué te gustó? ¿Qué mejorarías?"
@@ -113,32 +109,31 @@ const ReviewFormStep: React.FC<ReviewFormStepProps> = ({ category, item, onSubmi
                             className="text-gray-700 placeholder:text-gray-400"
                             disabled={isSubmitting}
                         />
-                        <div className={`absolute bottom-3 right-3 text-sm ${
-                            content.length > maxChars ? 'text-red-500' : 'text-gray-400'
+                        <div className={`${rf.contentSection.charCounter} ${
+                            content.length > maxChars ? rf.contentSection.charCounterError : rf.contentSection.charCounterNormal
                         }`}>
                             {content.length}/{maxChars}
                         </div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className={rf.contentSection.hint}>
                         Máximo {maxChars} caracteres
                     </p>
                 </div>
             </div>
 
-            {/* Botón de publicar con gradiente */}
             <button
                 type="submit"
                 disabled={!isValid || isSubmitting}
-                className={`w-full ${theme.componentSpacing.button.lg} ${colors.buttonGradient} ${colors.buttonHoverGradient} text-white ${theme.borders.radius.lg} font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${theme.shadows.scale.md} hover:shadow-lg flex items-center justify-center gap-2`}
+                className={`${rf.submitButton.base} ${theme.componentSpacing.button.lg} ${colors.buttonGradient} ${colors.buttonHoverGradient} text-white ${theme.borders.radius.lg} ${theme.shadows.scale.md} hover:shadow-lg`}
             >
                 {isSubmitting ? (
                     <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className={rf.submitButton.spinner} />
                         <span>Publicando...</span>
                     </>
                 ) : (
                     <>
-                        <Check className="w-5 h-5" />
+                        <Check className={rf.submitButton.icon} />
                         <span>Publicar reseña</span>
                     </>
                 )}

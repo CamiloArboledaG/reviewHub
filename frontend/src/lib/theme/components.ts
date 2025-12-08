@@ -397,3 +397,119 @@ export const header = {
     fallback: 'bg-gradient-to-br from-violet-500 to-purple-600 text-white font-medium text-sm',
   },
 } as const;
+
+/**
+ * NewReview Modal Component Tokens
+ */
+export const newReview = {
+  // Modal Container
+  modal: {
+    overlay: 'fixed inset-0 bg-black/50 z-50 flex justify-center items-center',
+    container: 'bg-white rounded-lg shadow-lg m-6 w-full max-w-[600px] overflow-hidden',
+    header: {
+      container: 'px-6 pt-6 pb-4 border-b border-gray-200/50',
+      titleRow: 'flex justify-between items-start mb-2',
+      titleWrapper: 'flex items-center gap-3',
+      title: 'text-lg font-semibold text-gray-900',
+      description: 'text-sm text-gray-600 mt-1',
+      backButton: 'flex items-center justify-center w-8 h-8 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 cursor-pointer group flex-shrink-0',
+      closeButton: 'text-gray-500 hover:text-gray-700 cursor-pointer ml-4 flex-shrink-0',
+    },
+    content: 'p-6',
+  },
+
+  // Category Selection
+  categorySelection: {
+    container: 'grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fade-in',
+    button: {
+      base: 'group relative overflow-hidden rounded-xl border border-gray-200/50 p-5 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 cursor-pointer',
+      iconContainer: 'shrink-0 rounded-lg bg-white p-3 shadow-sm transition-transform duration-300 group-hover:scale-110',
+      icon: 'h-6 w-6',
+      contentWrapper: 'flex-1 min-w-0',
+      title: 'font-semibold text-base mb-1 text-gray-900',
+      description: 'text-sm text-gray-600',
+      glowEffect: 'absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full',
+    },
+  },
+
+  // Item Search & Card
+  itemSearch: {
+    container: 'space-y-4 animate-fade-in',
+    label: 'block text-sm font-medium text-gray-700',
+    resultsContainer: 'max-h-[400px] overflow-y-auto space-y-2 border border-gray-200 rounded-lg p-2',
+    loadingContainer: 'flex items-center justify-center py-8',
+    loadingIcon: 'h-6 w-6 animate-spin text-purple-600',
+    loadingText: 'ml-2 text-gray-600',
+    emptyContainer: 'text-center py-8',
+    emptyText: 'text-gray-500',
+    suggestButton: {
+      base: 'w-full mt-2 p-4 border-2 border-dashed border-gray-300 rounded-lg transition-all duration-200 cursor-pointer group',
+      iconContainer: 'w-10 h-10 rounded-full flex items-center justify-center transition-colors',
+      icon: 'h-5 w-5',
+      textWrapper: 'text-left',
+      title: 'font-medium text-sm',
+      subtitle: 'text-xs',
+    },
+  },
+
+  itemCard: {
+    base: 'w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all duration-200 cursor-pointer',
+    selected: 'bg-gray-50',
+    unselected: 'border-gray-200 hover:border-gray-300 hover:bg-gray-50',
+    imageContainer: 'w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-gray-200 flex items-center justify-center relative',
+    imagePlaceholder: 'h-8 w-8 text-gray-400',
+    content: 'flex-1 text-left min-w-0',
+    titleRow: 'flex items-center gap-2 mb-1',
+    title: 'font-semibold text-gray-900 truncate text-sm',
+    description: 'text-sm text-gray-600 line-clamp-2',
+    pendingBadge: 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 flex-shrink-0',
+  },
+
+  // Suggest Item Step
+  suggestItem: {
+    container: 'space-y-5 animate-fade-in',
+    warningBox: 'bg-amber-50 border-2 border-amber-200 rounded-xl p-4',
+    warningText: 'text-sm text-amber-800',
+    label: 'block text-sm font-semibold text-gray-900 mb-2',
+    required: 'text-red-500',
+    submitButton: {
+      base: 'w-full font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2',
+      icon: 'h-5 w-5',
+    },
+  },
+
+  // Review Form Step
+  reviewForm: {
+    container: 'space-y-5 animate-fade-in',
+    itemCard: {
+      container: 'border-2 p-5',
+      imageContainer: 'w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 relative',
+      iconContainer: 'w-20 h-20 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md',
+      icon: 'w-10 h-10',
+      content: 'flex-1 min-w-0',
+      title: 'text-lg font-bold text-gray-900 mb-1',
+      description: 'text-gray-600 text-sm mb-2 line-clamp-2',
+      badgeContainer: 'flex items-center gap-2',
+      badge: 'inline-block px-3 py-1 text-xs font-medium rounded-full',
+      pendingBadge: 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800',
+    },
+    ratingSection: {
+      container: 'mb-5',
+      label: 'block text-sm font-semibold text-gray-900 mb-3',
+      required: 'text-red-500',
+    },
+    contentSection: {
+      label: 'block text-sm font-semibold text-gray-900 mb-2',
+      textareaWrapper: 'relative',
+      charCounter: 'absolute bottom-3 right-3 text-sm',
+      charCounterNormal: 'text-gray-400',
+      charCounterError: 'text-red-500',
+      hint: 'text-xs text-gray-500 mt-2',
+    },
+    submitButton: {
+      base: 'w-full font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2',
+      spinner: 'w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin',
+      icon: 'w-5 h-5',
+    },
+  },
+} as const;

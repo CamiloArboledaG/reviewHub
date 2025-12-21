@@ -5,7 +5,7 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Category, InfiniteReviewsData } from '@/lib/definitions';
-import { fetchCategories, followUser, unfollowUser } from '@/lib/queries';
+import { fetchCategories, followUser, unfollowUser, likeReview, unlikeReview } from '@/lib/queries';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
@@ -13,6 +13,7 @@ import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { categoryIcons } from '@/lib/styles';
 import StarRating from './StarRating';
 import { useToast } from '@/context/ToastContext';
+import { useAuth } from '@/context/AuthContext';
 import { theme } from '@/lib/theme';
 import { getCategoryBadgeClasses } from '@/lib/theme/index';
 
@@ -44,12 +45,14 @@ type ReviewCardProps = {
     likes: number;
     comments: number;
     isFollowing?: boolean;
+    isLiked?: boolean;
   };
 };
 
 const ReviewCard = ({ review }: ReviewCardProps) => {
     const queryClient = useQueryClient();
     const { showToast } = useToast();
+    const { user: currentUser } = useAuth();
     const [avatarError, setAvatarError] = useState(false);
     const [itemImageError, setItemImageError] = useState(false);
 
@@ -58,8 +61,9 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
         queryFn: fetchCategories,
       });
 
-  const { user, postTime, category, item, rating, content, likes, comments, isFollowing } = review;
+  const { user, postTime, category, item, rating, content, likes, comments, isFollowing, isLiked } = review;
   const currentCategory = categories?.find(c => c.slug === category.slug);
+  const isOwnReview = currentUser?._id === user._id;
 
   const followMutation = useMutation({
     mutationFn: () => followUser(user._id),
@@ -127,12 +131,107 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
     },
   });
 
+  const likeMutation = useMutation({
+    mutationFn: () => likeReview(review._id),
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+      });
+
+      const previousData = queryClient.getQueriesData({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+      });
+
+      queryClient.setQueriesData<InfiniteReviewsData>({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+      }, (old) => {
+        if (!old) return old;
+
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            reviews: page.reviews.map((r) =>
+              r._id === review._id ? { ...r, isLiked: true, likes: r.likes + 1 } : r
+            ),
+          })),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, _variables, context) => {
+      if (context?.previousData) {
+        context.previousData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      showToast(err.message || 'Error al dar me gusta', 'error');
+    },
+  });
+
+  const unlikeMutation = useMutation({
+    mutationFn: () => unlikeReview(review._id),
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+      });
+
+      const previousData = queryClient.getQueriesData({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+      });
+
+      queryClient.setQueriesData<InfiniteReviewsData>({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+      }, (old) => {
+        if (!old) return old;
+
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            reviews: page.reviews.map((r) =>
+              r._id === review._id ? { ...r, isLiked: false, likes: r.likes - 1 } : r
+            ),
+          })),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, _variables, context) => {
+      if (context?.previousData) {
+        context.previousData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      showToast(err.message || 'Error al quitar me gusta', 'error');
+    },
+  });
+
   const handleFollow = () => {
     followMutation.mutate();
   };
 
   const handleUnfollow = () => {
     unfollowMutation.mutate();
+  };
+
+  const handleLike = () => {
+    console.log('handleLike called - isLiked:', isLiked, 'review._id:', review._id);
+    if (isLiked === true) {
+      console.log('Calling unlikeMutation');
+      unlikeMutation.mutate();
+    } else {
+      console.log('Calling likeMutation');
+      likeMutation.mutate();
+    }
   };
 
   const rc = theme.components.reviewCard;
@@ -174,25 +273,29 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
             </div>
           </div>
           <div className={rc.header.actionsSection}>
-            {isFollowing ? (
-              <Button
-                variant="secondary"
-                size="sm"
-                className={rc.followButton.base}
-                onClick={handleUnfollow}
-                disabled={unfollowMutation.isPending}
-              >
-                {unfollowMutation.isPending ? 'Dejando...' : 'Siguiendo'}
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                className={rc.followButton.base}
-                onClick={handleFollow}
-                disabled={followMutation.isPending}
-              >
-                {followMutation.isPending ? 'Siguiendo...' : 'Seguir'}
-              </Button>
+            {!isOwnReview && (
+              <>
+                {isFollowing ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className={rc.followButton.base}
+                    onClick={handleUnfollow}
+                    disabled={unfollowMutation.isPending}
+                  >
+                    {unfollowMutation.isPending ? 'Dejando...' : 'Siguiendo'}
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className={rc.followButton.base}
+                    onClick={handleFollow}
+                    disabled={followMutation.isPending}
+                  >
+                    {followMutation.isPending ? 'Siguiendo...' : 'Seguir'}
+                  </Button>
+                )}
+              </>
             )}
             <Button variant="ghost" size="icon" className={rc.moreButton.base}>
               <MoreHorizontal className={rc.moreButton.icon} />
@@ -252,10 +355,20 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
             <Button
               variant="ghost"
               size="sm"
-              className={`${rc.actions.button.base} ${rc.actions.button.like}`}
+              className={`${rc.actions.button.base} ${rc.actions.button.like} group`}
+              onClick={handleLike}
+              disabled={likeMutation.isPending || unlikeMutation.isPending}
             >
-              <Heart className={rc.actions.button.icon} />
-              <span className={theme.typographyPresets.cardMeta}>{likes}</span>
+              <Heart
+                className={`${rc.actions.button.icon} transition-all duration-200 ease-in-out ${
+                  isLiked === true
+                    ? 'fill-red-500 text-red-500 scale-110'
+                    : 'fill-none group-hover:scale-125 group-hover:text-red-400 group-active:scale-95'
+                }`}
+              />
+              <span className={theme.typographyPresets.cardMeta}>
+                {likes}
+              </span>
             </Button>
             <Button
               variant="ghost"

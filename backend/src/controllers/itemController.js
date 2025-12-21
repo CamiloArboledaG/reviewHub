@@ -137,11 +137,28 @@ export const suggestItem = async (req, res) => {
       return res.status(400).json({ message: 'Título, descripción y categoría son requeridos' });
     }
 
+    const existingItem = await Item.findOne({
+      title: { $regex: new RegExp(`^${title.trim()}$`, 'i') },
+      category: category
+    });
+
+    if (existingItem) {
+      if (existingItem.status === 'active') {
+        return res.status(400).json({
+          message: 'Este item ya existe en nuestra base de datos. Puedes seleccionarlo de los resultados de búsqueda.'
+        });
+      } else if (existingItem.status === 'pending') {
+        return res.status(400).json({
+          message: 'Este item ya ha sido sugerido y está pendiente de aprobación. No es necesario sugerirlo nuevamente.'
+        });
+      }
+    }
+
     const imageUrl = 'https://res.cloudinary.com/dhxn0vpze/image/upload/v1737577614/reviewhub/defaults/item-placeholder_sieyzs.jpg';
 
     const item = await Item.create({
-      title,
-      description,
+      title: title.trim(),
+      description: description.trim(),
       imageUrl,
       category,
       status: 'pending',

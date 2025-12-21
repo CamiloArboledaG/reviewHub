@@ -1,112 +1,135 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getFollowing, unfollowUser, FollowingResponse } from "@/lib/queries";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import ReviewCard from "@/components/ReviewCard";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { formatTimeAgo } from "@/lib/utils";
+import React, { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User } from "@/lib/definitions";
-import { useToast } from "@/context/ToastContext";
+import { fetchReviews } from "@/lib/queries";
+import { useSearchParams } from "next/navigation";
+import NewReview from "@/components/NewReview";
+
+const ReviewFeedSkeleton = () => (
+  <div className="flex flex-col items-center gap-8 w-full">
+    {[...Array(3)].map((_, i) => (
+      <div key={i} className="bg-card rounded-lg shadow-sm border border-border p-6 w-full max-w-2xl">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-4">
+            <Skeleton className="w-12 h-12 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[250px]" />
+              <Skeleton className="h-4 w-[200px]" />
+            </div>
+          </div>
+          <Skeleton className="h-10 w-[100px] rounded-full" />
+        </div>
+        <div className="mt-4 flex gap-6">
+          <Skeleton className="w-32 h-40 rounded-md flex-shrink-0" />
+          <div className="flex flex-col flex-grow space-y-2">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 export default function FollowingPage() {
-  const queryClient = useQueryClient();
-  const { showToast } = useToast();
+  const { ref, inView } = useInView();
+  const searchParams = useSearchParams();
+  const categories = searchParams.getAll('category');
 
-  const { data, isLoading, isError, error } = useQuery<FollowingResponse>({
-    queryKey: ["following"],
-    queryFn: getFollowing,
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    status,
+  } = useInfiniteQuery({
+    queryKey: ['following-reviews', categories],
+    queryFn: ({ pageParam = 1 }) => fetchReviews({ pageParam, categories, followingOnly: true }),
+    initialPageParam: 1,
     staleTime: 0,
-  });
-
-  const mutation = useMutation<{ message: string }, Error, string, { previous?: FollowingResponse }>({
-    mutationFn: unfollowUser,
-    onMutate: async (userId: string) => {
-      await queryClient.cancelQueries({ queryKey: ["following"] });
-      const previous = queryClient.getQueryData<FollowingResponse>(["following"]);
-      queryClient.setQueryData<FollowingResponse | undefined>(["following"], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          following: old.following.filter((u: User) => u._id !== userId),
-        };
-      });
-      return { previous };
-    },
-    onError: (err, _variables, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(["following"], context.previous);
-      }
-      showToast(err.message || 'Error al dejar de seguir al usuario', 'error');
+    refetchOnWindowFocus: false,
+    getNextPageParam: (lastPage) => {
+      return lastPage.hasNextPage ? lastPage.currentPage + 1 : undefined;
     },
   });
 
-  if (isLoading) {
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  if (status === 'pending') {
     return (
       <div className="p-8">
-        <div className="max-w-2xl mx-auto space-y-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="bg-card rounded-lg shadow-sm border border-border p-4 flex items-center gap-4">
-              <Skeleton className="w-12 h-12 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-4 w-28" />
-              </div>
-              <Skeleton className="h-9 w-28 rounded-md" />
-            </div>
-          ))}
-        </div>
+        <ReviewFeedSkeleton />
       </div>
-    );
+    )
   }
 
-  if (isError) {
-    return <div className="p-8 max-w-2xl mx-auto text-red-500">{(error as Error).message}</div>;
-  }
-
-  const following = data?.following || [];
-
-  if (following.length === 0) {
-    return (
-      <div className="p-8">
-        <div className="max-w-2xl mx-auto text-center text-muted-foreground">
-          <p>No sigues a nadie todavía.</p>
-          <p>Explora el feed y comienza a seguir a usuarios interesantes.</p>
-        </div>
-      </div>
-    );
+  if (status === 'error') {
+    return <p>Error: {error.message}</p>;
   }
 
   return (
     <div className="p-8">
-      <div className="max-w-2xl mx-auto space-y-3">
-        {following.map((user: User) => (
-          <div key={user._id} className="bg-card rounded-lg shadow-sm border border-border p-4 flex items-center gap-4">
-            <div className="w-12 h-12 relative">
-              {user.avatar?.imageUrl ? (
-                <Image
-                  src={user.avatar.imageUrl}
-                  alt={user.name || "avatar"}
-                  width={48}
-                  height={48}
-                  className="rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-200 rounded-full" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">{user.name}</p>
-              <p className="text-sm text-muted-foreground truncate">@{user.username}</p>
-            </div>
-            <Button
-              variant="secondary"
-              onClick={() => mutation.mutate(user._id)}
-              disabled={mutation.isPending}
-            >
-              {mutation.isPending ? "Quitando..." : "Dejar de seguir"}
-            </Button>
-          </div>
+      <div className="flex flex-col items-center gap-8">
+        {data.pages.map((page, i) => (
+          <React.Fragment key={i}>
+            {page.reviews.map((review) => {
+              const reviewForCard = {
+                _id: review._id,
+                user: {
+                  _id: review.user._id,
+                  name: review.user.name,
+                  handle: review.user.username,
+                  avatar: review.user.avatar,
+                },
+                postTime: formatTimeAgo(review.createdAt),
+                category: {
+                  slug: review.item.category.slug,
+                },
+                item: {
+                  title: review.item.title,
+                  imageUrl: review.item.imageUrl || '',
+                },
+                rating: review.rating,
+                content: review.content,
+                likes: review.likes,
+                comments: review.comments.length,
+                isFollowing: review.isFollowing,
+                isLiked: review.isLiked,
+              };
+              return <ReviewCard key={review._id} review={reviewForCard} />;
+            })}
+          </React.Fragment>
         ))}
+
+        <div ref={ref} className="h-10" />
+
+        <NewReview />
+
+        {isFetchingNextPage && <ReviewFeedSkeleton />}
+
+        {!hasNextPage && !isFetching && data.pages[0].reviews.length === 0 && (
+          <div className="max-w-2xl text-center space-y-2">
+            <p className="text-muted-foreground">No hay reseñas de personas que sigues.</p>
+            <p className="text-sm text-muted-foreground">Explora el feed de inicio y comienza a seguir a usuarios interesantes.</p>
+          </div>
+        )}
+
+        {!hasNextPage && !isFetching && data.pages[0].reviews.length > 0 &&(
+          <p className="text-muted-foreground">No hay más reseñas para mostrar.</p>
+        )}
       </div>
     </div>
   );

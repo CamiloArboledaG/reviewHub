@@ -29,12 +29,15 @@ export const fetchDefaultAvatars = async (): Promise<Avatar[]> => {
   return res.json();
 };
 
-export const fetchReviews = async ({ pageParam = 1, categories }: { pageParam?: number, categories?: string[] | null }): Promise<ReviewsPage> => {
+export const fetchReviews = async ({ pageParam = 1, categories, followingOnly = false }: { pageParam?: number, categories?: string[] | null, followingOnly?: boolean }): Promise<ReviewsPage> => {
   let url = `${process.env.NEXT_PUBLIC_API_URL}/reviews?page=${pageParam}&limit=5`;
   if (categories && categories.length > 0) {
     categories.forEach(category => {
       url += `&category=${category}`;
     });
+  }
+  if (followingOnly) {
+    url += '&followingOnly=true';
   }
   const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) {
@@ -236,6 +239,34 @@ export const createReview = async ({
   if (!res.ok) {
     const errorData = await res.json();
     throw new Error(errorData.message || 'Error al crear la reseña');
+  }
+
+  return res.json();
+};
+
+export const likeReview = async (reviewId: string) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewId}/like`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || 'Error al dar me gusta');
+  }
+
+  return res.json();
+};
+
+export const unlikeReview = async (reviewId: string) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewId}/unlike`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || 'Error al quitar me gusta');
   }
 
   return res.json();

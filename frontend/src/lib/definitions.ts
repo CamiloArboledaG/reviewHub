@@ -42,6 +42,7 @@ export type Review = {
   likes: number;
   comments: string[];
   isFollowing?: boolean;
+  isLiked?: boolean;
 };
 
 export type ReviewsPage = {

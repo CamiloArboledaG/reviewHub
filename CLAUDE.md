@@ -53,7 +53,15 @@ Blurbit is a full-stack social review platform where users can post and share re
   - `queries.ts` - API fetch functions (fetchReviews, loginUser, followUser, searchItems, suggestItem, etc.)
   - `definitions.ts` - TypeScript type definitions
   - `styles.ts` - Category-specific style utilities (colors, icons, gradients)
-  - `theme.ts` - Centralized theme tokens (buttons, inputs, radius, spacing, shadows)
+  - `theme/` - Modular design system with separated concerns
+    - `index.ts` - Main theme export with unified access
+    - `colors.ts` - Color tokens and category color classes
+    - `typography.ts` - Font scales, presets, and responsive typography
+    - `spacing.ts` - Spacing scale and component spacing
+    - `borders.ts` - Border tokens and presets
+    - `shadows.ts` - Shadow tokens and glow effects
+    - `transitions.ts` - Transition presets and animations
+    - `components.ts` - Component-specific style tokens (buttons, inputs, badges, avatars)
   - `utils.ts` - Helper functions
 
 **Data Fetching:**
@@ -70,8 +78,9 @@ Blurbit is a full-stack social review platform where users can post and share re
 ### Backend
 ```bash
 cd backend
-npm run dev          # Start backend with nodemon (watches for changes)
-npm run seed        # Seed database with sample data
+npm run dev                # Start backend with nodemon (watches for changes)
+npm run seed               # Seed database with sample data
+npm run migrate-avatars    # Migrate avatar data (admin script)
 ```
 
 ### Frontend
@@ -102,15 +111,22 @@ npm run lint        # Run ESLint
 4. AuthContext stores user data and provides `isAuthenticated` state
 5. Middleware on both frontend and backend protect routes
 
-### Review Pagination
-- Backend: Uses MongoDB skip/limit with `?page=X&limit=Y&category=Z` query params
+### Review Pagination & Ranking
+- Backend: Intelligent ranking algorithm that scores reviews based on multiple factors
+  - **See `backend/RANKING_ALGORITHM.md` for detailed documentation**
+  - Factors: recency (72h decay), engagement (likes + comments), rating extremes, following boost
+  - Supports `?followingOnly=true` parameter to filter reviews from followed users only
+  - Pagination with `?page=X&limit=Y&category=Z` query params
 - Frontend: TanStack Query `useInfiniteQuery` for infinite scroll
 - Reviews include populated user and item data with category
 
 ### Social Features
 - User model has bidirectional `followers` and `following` arrays
 - Follow/unfollow endpoints at `/api/users/:id/follow` and `/api/users/:id/unfollow`
-- Following feed filters reviews by followed users
+- **Following feed** (`/following`): Shows only reviews from followed users using `followingOnly=true` parameter
+  - Uses same ReviewCard components and infinite scroll as Home
+  - Same ranking algorithm but without following boost (all reviews are from followed users)
+- **Home feed** (`/home`): Shows all reviews with slight boost for followed users (1.3x multiplier)
 
 ### Image Handling
 - Cloudinary integration for user avatars and item images
@@ -143,6 +159,37 @@ npm run lint        # Run ESLint
 - All models are imported in `backend/src/models/index.js` to ensure registration
 - Use `.populate()` for referenced fields (user, item, category)
 - Timestamps are automatically managed with `{ timestamps: true }`
+
+### Using the Theme System
+**Location:** `frontend/src/lib/theme/`
+
+The theme system provides centralized design tokens organized by concern:
+
+```tsx
+import { theme } from '@/lib/theme';
+
+// Use category colors
+<div className={theme.categoryColorClasses.game.bg.base}>
+
+// Use typography presets
+<h1 className={theme.typographyPresets.h1}>
+
+// Use component tokens
+<button className={theme.components.button.sizes.md}>
+
+// Use helper functions
+const colors = getCategoryColors('game');
+const glow = getCategoryGlow('movie', 'strong');
+```
+
+**Theme structure:**
+- `colors` - Base colors and category-specific color classes
+- `typography` - Font scales, weights, and responsive presets
+- `spacing` - Spacing scale and component-specific spacing
+- `borders` - Border widths, radius presets, and component borders
+- `shadows` - Shadow tokens and category-specific glow effects
+- `transitions` - Transition presets and animations
+- `components` - Pre-configured component styles (button, input, badge, avatar, reviewCard, etc.)
 
 ### Using CustomInput Component
 **Location:** `frontend/src/components/ui/custom-input.tsx`

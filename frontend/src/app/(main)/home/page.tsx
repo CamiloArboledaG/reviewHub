@@ -107,6 +107,7 @@ export default function Home() {
                 likes: review.likes,
                 comments: review.comments.length,
                 isFollowing: review.isFollowing,
+                isLiked: review.isLiked,
               };
               return <ReviewCard key={review._id} review={reviewForCard} />;
             })}

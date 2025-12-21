@@ -1,5 +1,5 @@
 import express from 'express';
-import { createReview, getReviews } from '../controllers/reviewController.js';
+import { createReview, getReviews, likeReview, unlikeReview } from '../controllers/reviewController.js';
 import { protect, loadUser } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -78,5 +78,9 @@ router.post('/', protect, createReview);
  *         description: Error del servidor
  */
 router.get('/', loadUser, getReviews);
+
+router.post('/:id/like', protect, likeReview);
+
+router.post('/:id/unlike', protect, unlikeReview);
 
 export default router;

@@ -105,7 +105,7 @@ export default function FollowingPage() {
                 rating: review.rating,
                 content: review.content,
                 likes: review.likes,
-                comments: review.comments.length,
+                comments: review.comments,
                 isFollowing: review.isFollowing,
                 isLiked: review.isLiked,
               };

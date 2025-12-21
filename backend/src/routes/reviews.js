@@ -1,5 +1,6 @@
 import express from 'express';
-import { createReview, getReviews, likeReview, unlikeReview } from '../controllers/reviewController.js';
+import { createReview, getReviews, likeReview, unlikeReview, getReviewById } from '../controllers/reviewController.js';
+import { getReviewComments, createComment, deleteComment } from '../controllers/commentController.js';
 import { protect, loadUser } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -79,8 +80,16 @@ router.post('/', protect, createReview);
  */
 router.get('/', loadUser, getReviews);
 
+router.get('/:id', loadUser, getReviewById);
+
 router.post('/:id/like', protect, likeReview);
 
 router.post('/:id/unlike', protect, unlikeReview);
+
+router.get('/:reviewId/comments', loadUser, getReviewComments);
+
+router.post('/:reviewId/comments', protect, createComment);
+
+router.delete('/comments/:id', protect, deleteComment);
 
 export default router;

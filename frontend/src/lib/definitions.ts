@@ -40,7 +40,7 @@ export type Review = {
     max: number;
   };
   likes: number;
-  comments: string[];
+  comments: number;
   isFollowing?: boolean;
   isLiked?: boolean;
 };
@@ -78,4 +78,30 @@ export type ItemsResponse = {
   totalPages: number;
   totalItems: number;
   hasNextPage: boolean;
+};
+
+export type Comment = {
+  _id: string;
+  user: User;
+  review: string;
+  content: string;
+  parentComment: string | null;
+  likes: number;
+  repliesCount: number;
+  isLiked?: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CommentsPage = {
+  comments: Comment[];
+  currentPage: number;
+  totalPages: number;
+  totalComments: number;
+  hasNextPage: boolean;
+};
+
+export type InfiniteCommentsData = {
+  pages: CommentsPage[];
+  pageParams: number[];
 }; 

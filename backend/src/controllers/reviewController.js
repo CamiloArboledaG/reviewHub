@@ -165,6 +165,7 @@ export const getReviews = async (req, res) => {
       isFollowing: followingSet.has(review.user._id.toString()),
       isLiked: currentUserId ? review.likes.some(likeId => likeId.toString() === currentUserId) : false,
       likes: review.likes.length,
+      comments: review.comments.length,
       score: calculateReviewScore(review, followingSet)
     }));
 
@@ -234,5 +235,48 @@ export const unlikeReview = async (req, res) => {
   } catch (error) {
     console.error('Error unliking review:', error);
     res.status(500).json({ message: 'Error al quitar me gusta', error: error.message });
+  }
+};
+
+export const getReviewById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const review = await Review.findById(id)
+      .populate({
+        path: 'user',
+        select: 'name username _id',
+        populate: { path: 'avatar', select: 'imageUrl name' }
+      })
+      .populate({
+        path: 'item',
+        populate: {
+          path: 'category',
+          select: 'name slug'
+        }
+      })
+      .lean();
+
+    if (!review) {
+      return res.status(404).json({ message: 'Review no encontrado' });
+    }
+
+    const currentUserId = req.user?._id?.toString();
+    const followingSet = req.user
+      ? new Set((await User.findById(req.user._id).select('following').lean())?.following.map(id => id.toString()) || [])
+      : new Set();
+
+    const enrichedReview = {
+      ...review,
+      isFollowing: followingSet.has(review.user._id.toString()),
+      isLiked: currentUserId ? review.likes.some(likeId => likeId.toString() === currentUserId) : false,
+      likes: review.likes.length,
+      comments: review.comments.length,
+    };
+
+    res.json(enrichedReview);
+  } catch (error) {
+    console.error('Error fetching review:', error);
+    res.status(500).json({ message: 'Error al obtener el review', error: error.message });
   }
 };

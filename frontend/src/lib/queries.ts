@@ -271,3 +271,58 @@ export const unlikeReview = async (reviewId: string) => {
 
   return res.json();
 };
+
+export const fetchReviewById = async (reviewId: string) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewId}`, {
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    throw new Error('Error al obtener el review');
+  }
+
+  return res.json();
+};
+
+export const fetchComments = async ({ reviewId, pageParam = 1, sort = 'top' }: { reviewId: string, pageParam?: number, sort?: string }) => {
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewId}/comments?page=${pageParam}&limit=20&sort=${sort}`;
+  const res = await fetch(url, { credentials: 'include' });
+
+  if (!res.ok) {
+    throw new Error('Error al obtener los comentarios');
+  }
+
+  return res.json();
+};
+
+export const createComment = async ({ reviewId, content }: { reviewId: string, content: string }) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewId}/comments`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ content }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || 'Error al crear el comentario');
+  }
+
+  return res.json();
+};
+
+export const deleteComment = async (commentId: string) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/comments/${commentId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || 'Error al eliminar el comentario');
+  }
+
+  return res.json();
+};

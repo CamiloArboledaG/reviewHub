@@ -4,6 +4,7 @@ import { Heart, MessageCircle, MoreHorizontal, Share2, User } from 'lucide-react
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { Category, InfiniteReviewsData } from '@/lib/definitions';
 import { fetchCategories, followUser, unfollowUser, likeReview, unlikeReview } from '@/lib/queries';
 import { Button } from './ui/button';
@@ -53,6 +54,7 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
     const queryClient = useQueryClient();
     const { showToast } = useToast();
     const { user: currentUser } = useAuth();
+    const router = useRouter();
     const [avatarError, setAvatarError] = useState(false);
     const [itemImageError, setItemImageError] = useState(false);
 
@@ -374,6 +376,7 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
               variant="ghost"
               size="sm"
               className={`${rc.actions.button.base} ${rc.actions.button.comment}`}
+              onClick={() => router.push(`/review/${review._id}`)}
             >
               <MessageCircle className={rc.actions.button.icon} />
               <span className={theme.typographyPresets.cardMeta}>{comments}</span>

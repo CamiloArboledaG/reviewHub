@@ -15,7 +15,21 @@ const commentSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
+    maxlength: 500,
   },
+  parentComment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment',
+    default: null,
+  },
+  likes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  replies: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment',
+  }],
 }, { timestamps: true });
 
 const Comment = mongoose.model('Comment', commentSchema);

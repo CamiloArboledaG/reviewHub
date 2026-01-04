@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 const ReviewDetailSkeleton = () => (
-  <div className="bg-card rounded-lg shadow-sm border border-border p-6 w-full max-w-2xl">
+  <div className="bg-card rounded-lg shadow-sm border border-border p-6 w-full max-w-[670px]">
     <div className="flex items-start justify-between">
       <div className="flex items-start gap-4">
         <Skeleton className="w-12 h-12 rounded-full" />
@@ -100,8 +100,8 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <>
-      <div className="p-8 pb-32">
-        <div className="max-w-2xl mx-auto flex flex-col gap-6">
+      <div className="p-8 pb-64">
+        <div className="max-w-[670px] mx-auto flex flex-col gap-6">
           <Link href="/home">
             <Button variant="ghost" size="sm" className="mb-2">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -119,8 +119,8 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-gray-200 dark:border-gray-800 shadow-lg z-10">
-        <div className="max-w-2xl mx-auto p-4">
+      <div className="fixed bottom-0 left-64 right-0 z-10 flex justify-center py-4 bg-gradient-to-t from-background/60 via-background/30 to-transparent backdrop-blur-sm">
+        <div className="w-full max-w-[670px] bg-card rounded-lg shadow-2xl border border-gray-200 dark:border-gray-800 p-4 ring-1 ring-black/5">
           <CommentForm reviewId={id} />
         </div>
       </div>

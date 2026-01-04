@@ -1,6 +1,6 @@
 'use client';
 
-import { Heart, MessageCircle, MoreHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Comment, InfiniteCommentsData } from '@/lib/definitions';
@@ -18,7 +18,7 @@ import {
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatTimeAgo } from '@/lib/utils';
-import { theme } from '@/lib/theme';
+import ActionButtons from './ActionButtons';
 
 type CommentCardProps = {
   comment: Comment;
@@ -83,84 +83,71 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
 
   return (
     <Card className="overflow-hidden border-gray-200 dark:border-gray-800">
-      <CardContent className="p-4">
-        <div className="flex gap-3">
-          <Avatar className="w-10 h-10 flex-shrink-0">
-            {comment.user.avatar?.imageUrl && !avatarError ? (
-              <AvatarImage
-                src={comment.user.avatar.imageUrl}
-                alt={comment.user.name}
-                onError={() => setAvatarError(true)}
-              />
-            ) : (
-              <AvatarFallback className="bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300">
-                {comment.user.name.charAt(0)}
-              </AvatarFallback>
-            )}
-          </Avatar>
+      <CardContent className="p-0">
+        <div className="p-4">
+          <div className="flex gap-3">
+            <Avatar className="w-10 h-10 flex-shrink-0">
+              {comment.user.avatar?.imageUrl && !avatarError ? (
+                <AvatarImage
+                  src={comment.user.avatar.imageUrl}
+                  alt={comment.user.name}
+                  onError={() => setAvatarError(true)}
+                />
+              ) : (
+                <AvatarFallback className="bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300">
+                  {comment.user.name.charAt(0)}
+                </AvatarFallback>
+              )}
+            </Avatar>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm">{comment.user.name}</span>
-                <span className="text-muted-foreground text-sm">@{comment.user.username}</span>
-                {isReviewAuthor && (
-                  <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-2 py-0.5">
-                    Autor
-                  </Badge>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-sm">{comment.user.name}</span>
+                  <span className="text-muted-foreground text-sm">@{comment.user.username}</span>
+                  {isReviewAuthor && (
+                    <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-2 py-0.5">
+                      Autor
+                    </Badge>
+                  )}
+                  <span className="text-muted-foreground text-sm">·</span>
+                  <span className="text-muted-foreground text-sm">{formatTimeAgo(comment.createdAt)}</span>
+                </div>
+
+                {isAuthor && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950 cursor-pointer"
+                        onClick={handleDelete}
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {deleteMutation.isPending ? 'Eliminando...' : 'Eliminar comentario'}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
-                <span className="text-muted-foreground text-sm">·</span>
-                <span className="text-muted-foreground text-sm">{formatTimeAgo(comment.createdAt)}</span>
               </div>
 
-              {isAuthor && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950 cursor-pointer"
-                      onClick={handleDelete}
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      {deleteMutation.isPending ? 'Eliminando...' : 'Eliminar comentario'}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-
-            <p className="mt-2 text-sm text-foreground whitespace-pre-wrap break-words">
-              {comment.content}
-            </p>
-
-            <div className="flex items-center gap-4 mt-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 h-8 px-2"
-                disabled
-              >
-                <Heart className="h-4 w-4" />
-                <span className={theme.typographyPresets.cardMeta}>{comment.likes}</span>
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950 h-8 px-2"
-                disabled
-              >
-                <MessageCircle className="h-4 w-4" />
-                <span className={theme.typographyPresets.cardMeta}>Responder</span>
-              </Button>
+              <p className="mt-2 text-sm text-foreground whitespace-pre-wrap break-words">
+                {comment.content}
+              </p>
             </div>
           </div>
         </div>
+
+        <ActionButtons
+          likes={comment.likes}
+          isLiked={false}
+          commentText="Responder"
+          disabled
+        />
       </CardContent>
     </Card>
   );

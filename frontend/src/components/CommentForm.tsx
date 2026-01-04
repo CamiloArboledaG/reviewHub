@@ -7,8 +7,6 @@ import { createComment } from '@/lib/queries';
 import { Button } from './ui/button';
 import { CustomInput } from './ui/custom-input';
 import { useToast } from '@/context/ToastContext';
-import { theme } from '@/lib/theme';
-import { getCategoryColors } from '@/lib/theme';
 
 type CommentFormProps = {
   reviewId: string;
@@ -18,8 +16,7 @@ const CommentForm = ({ reviewId }: CommentFormProps) => {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [content, setContent] = useState('');
-
-  const colors = getCategoryColors('game');
+  const [isFocused, setIsFocused] = useState(false);
 
   const createMutation = useMutation({
     mutationFn: (commentContent: string) => createComment({ reviewId, content: commentContent }),
@@ -78,13 +75,16 @@ const CommentForm = ({ reviewId }: CommentFormProps) => {
       <CustomInput
         asTextarea
         variant="md"
-        rows={2}
+        rows={isFocused ? 5 : 2}
         placeholder="Escribe tu comentario..."
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        focusRing={colors.inputFocusRing}
-        focusBorder={colors.inputFocusBorder}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        focusRing="focus:ring-2 focus:ring-purple-500/20"
+        focusBorder="focus:border-purple-500"
         disabled={createMutation.isPending}
+        className="min-h-[60px] max-h-[200px] overflow-y-auto resize-none transition-all duration-300 ease-in-out"
       />
 
       <div className="flex items-center justify-between mt-3">
@@ -95,7 +95,6 @@ const CommentForm = ({ reviewId }: CommentFormProps) => {
         <Button
           type="submit"
           disabled={createMutation.isPending || !content.trim() || isOverLimit}
-          className={theme.components.button.primary}
         >
           {createMutation.isPending ? 'Publicando...' : 'Comentar'}
         </Button>

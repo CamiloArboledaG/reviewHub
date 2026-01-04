@@ -1,6 +1,6 @@
 'use client';
 
-import { Heart, MessageCircle, MoreHorizontal, Share2, User } from 'lucide-react';
+import { MoreHorizontal, User } from 'lucide-react';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import { theme } from '@/lib/theme';
 import { getCategoryBadgeClasses } from '@/lib/theme/index';
+import ActionButtons from './ActionButtons';
 
 type ReviewCardProps = {
   review: {
@@ -352,44 +353,15 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
         </div>
 
         {/* Actions */}
-        <div className={rc.actions.container}>
-          <div className={rc.actions.leftGroup}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`${rc.actions.button.base} ${rc.actions.button.like} group`}
-              onClick={handleLike}
-              disabled={likeMutation.isPending || unlikeMutation.isPending}
-            >
-              <Heart
-                className={`${rc.actions.button.icon} transition-all duration-200 ease-in-out ${
-                  isLiked === true
-                    ? 'fill-red-500 text-red-500 scale-110'
-                    : 'fill-none group-hover:scale-125 group-hover:text-red-400 group-active:scale-95'
-                }`}
-              />
-              <span className={theme.typographyPresets.cardMeta}>
-                {likes}
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`${rc.actions.button.base} ${rc.actions.button.comment}`}
-              onClick={() => router.push(`/review/${review._id}`)}
-            >
-              <MessageCircle className={rc.actions.button.icon} />
-              <span className={theme.typographyPresets.cardMeta}>{comments}</span>
-            </Button>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`${rc.actions.button.base} ${rc.actions.button.share}`}
-          >
-            <Share2 className={rc.actions.button.icon} />
-          </Button>
-        </div>
+        <ActionButtons
+          likes={likes}
+          isLiked={isLiked}
+          onLike={handleLike}
+          comments={comments}
+          onComment={() => router.push(`/review/${review._id}`)}
+          showShare
+          likePending={likeMutation.isPending || unlikeMutation.isPending}
+        />
       </CardContent>
     </Card>
   );

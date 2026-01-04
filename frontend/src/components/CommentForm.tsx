@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { InfiniteCommentsData } from '@/lib/definitions';
+import { InfiniteCommentsData, Review } from '@/lib/definitions';
 import { createComment } from '@/lib/queries';
 import { Button } from './ui/button';
 import { CustomInput } from './ui/custom-input';
@@ -42,6 +42,11 @@ const CommentForm = ({ reviewId }: CommentFormProps) => {
             ...old.pages.slice(1),
           ],
         };
+      });
+
+      queryClient.setQueryData<Review>(['review', reviewId], (old) => {
+        if (!old) return old;
+        return { ...old, comments: old.comments + 1 };
       });
 
       showToast('Comentario publicado exitosamente', 'success');

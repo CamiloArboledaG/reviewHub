@@ -173,3 +173,51 @@ export const deleteComment = async (req, res) => {
     res.status(500).json({ message: 'Error al eliminar el comentario', error: error.message });
   }
 };
+
+export const likeComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const comment = await Comment.findById(id);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comentario no encontrado' });
+    }
+
+    if (comment.likes.includes(userId)) {
+      return res.status(400).json({ message: 'Ya has dado me gusta a este comentario' });
+    }
+
+    comment.likes.push(userId);
+    await comment.save();
+
+    res.json({ message: 'Me gusta agregado exitosamente', likesCount: comment.likes.length });
+  } catch (error) {
+    console.error('Error liking comment:', error);
+    res.status(500).json({ message: 'Error al dar me gusta', error: error.message });
+  }
+};
+
+export const unlikeComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const comment = await Comment.findById(id);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comentario no encontrado' });
+    }
+
+    if (!comment.likes.includes(userId)) {
+      return res.status(400).json({ message: 'No has dado me gusta a este comentario' });
+    }
+
+    comment.likes = comment.likes.filter(likeId => likeId.toString() !== userId.toString());
+    await comment.save();
+
+    res.json({ message: 'Me gusta eliminado exitosamente', likesCount: comment.likes.length });
+  } catch (error) {
+    console.error('Error unliking comment:', error);
+    res.status(500).json({ message: 'Error al quitar me gusta', error: error.message });
+  }
+};

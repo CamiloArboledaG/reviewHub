@@ -3,8 +3,8 @@
 import { MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Comment, InfiniteCommentsData } from '@/lib/definitions';
-import { deleteComment } from '@/lib/queries';
+import { Comment, InfiniteCommentsData, Review } from '@/lib/definitions';
+import { deleteComment, likeComment, unlikeComment } from '@/lib/queries';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
@@ -34,8 +34,8 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
   const isAuthor = currentUser?._id === comment.user._id;
   const isReviewAuthor = comment.user._id === reviewAuthorId;
 
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteComment(comment._id),
+  const likeMutation = useMutation({
+    mutationFn: () => likeComment(comment._id),
     onMutate: async () => {
       await queryClient.cancelQueries({
         predicate: (query) => query.queryKey[0] === 'comments'
@@ -54,10 +54,93 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
           ...old,
           pages: old.pages.map((page) => ({
             ...page,
+            comments: page.comments.map((c) =>
+              c._id === comment._id ? { ...c, isLiked: true, likes: c.likes + 1 } : c
+            ),
+          })),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, _variables, context) => {
+      if (context?.previousData) {
+        context.previousData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      showToast(err.message || 'Error al dar me gusta', 'error');
+    },
+  });
+
+  const unlikeMutation = useMutation({
+    mutationFn: () => unlikeComment(comment._id),
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        predicate: (query) => query.queryKey[0] === 'comments'
+      });
+
+      const previousData = queryClient.getQueriesData({
+        predicate: (query) => query.queryKey[0] === 'comments'
+      });
+
+      queryClient.setQueriesData<InfiniteCommentsData>({
+        predicate: (query) => query.queryKey[0] === 'comments'
+      }, (old) => {
+        if (!old) return old;
+
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            comments: page.comments.map((c) =>
+              c._id === comment._id ? { ...c, isLiked: false, likes: c.likes - 1 } : c
+            ),
+          })),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, _variables, context) => {
+      if (context?.previousData) {
+        context.previousData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      showToast(err.message || 'Error al quitar me gusta', 'error');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteComment(comment._id),
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        predicate: (query) => query.queryKey[0] === 'comments' || query.queryKey[0] === 'review'
+      });
+
+      const previousData = queryClient.getQueriesData({
+        predicate: (query) => query.queryKey[0] === 'comments' || query.queryKey[0] === 'review'
+      });
+
+      queryClient.setQueriesData<InfiniteCommentsData>({
+        predicate: (query) => query.queryKey[0] === 'comments'
+      }, (old) => {
+        if (!old) return old;
+
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
             comments: page.comments.filter((c) => c._id !== comment._id),
             totalComments: page.totalComments - 1,
           })),
         };
+      });
+
+      queryClient.setQueryData<Review>(['review', comment.review], (old) => {
+        if (!old) return old;
+        return { ...old, comments: old.comments - 1 };
       });
 
       return { previousData };
@@ -74,6 +157,14 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
       showToast('Comentario eliminado exitosamente', 'success');
     },
   });
+
+  const handleLike = () => {
+    if (comment.isLiked === true) {
+      unlikeMutation.mutate();
+    } else {
+      likeMutation.mutate();
+    }
+  };
 
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
@@ -144,9 +235,10 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
 
         <ActionButtons
           likes={comment.likes}
-          isLiked={false}
+          isLiked={comment.isLiked}
+          onLike={handleLike}
           commentText="Responder"
-          disabled
+          likePending={likeMutation.isPending || unlikeMutation.isPending}
         />
       </CardContent>
     </Card>

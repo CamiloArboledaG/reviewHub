@@ -5,7 +5,7 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { Category, InfiniteReviewsData } from '@/lib/definitions';
+import { Category, InfiniteReviewsData, Review } from '@/lib/definitions';
 import { fetchCategories, followUser, unfollowUser, likeReview, unlikeReview } from '@/lib/queries';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
@@ -71,11 +71,20 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
   const followMutation = useMutation({
     mutationFn: () => followUser(user._id),
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ['reviews'] });
+      await queryClient.cancelQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews' || query.queryKey[0] === 'review'
+      });
 
-      const previousData = queryClient.getQueriesData({ queryKey: ['reviews'] });
+      const previousData = queryClient.getQueriesData({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews' || query.queryKey[0] === 'review'
+      });
 
-      queryClient.setQueriesData<InfiniteReviewsData>({ queryKey: ['reviews'] }, (old) => {
+      queryClient.setQueriesData<InfiniteReviewsData>({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+      }, (old) => {
         if (!old) return old;
 
         return {
@@ -87,6 +96,11 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
             ),
           })),
         };
+      });
+
+      queryClient.setQueryData<Review>(['review', review._id], (old) => {
+        if (!old) return old;
+        return { ...old, isFollowing: true };
       });
 
       return { previousData };
@@ -104,11 +118,20 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
   const unfollowMutation = useMutation({
     mutationFn: () => unfollowUser(user._id),
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ['reviews'] });
+      await queryClient.cancelQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews' || query.queryKey[0] === 'review'
+      });
 
-      const previousData = queryClient.getQueriesData({ queryKey: ['reviews'] });
+      const previousData = queryClient.getQueriesData({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews' || query.queryKey[0] === 'review'
+      });
 
-      queryClient.setQueriesData<InfiniteReviewsData>({ queryKey: ['reviews'] }, (old) => {
+      queryClient.setQueriesData<InfiniteReviewsData>({
+        predicate: (query) =>
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+      }, (old) => {
         if (!old) return old;
 
         return {
@@ -120,6 +143,11 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
             ),
           })),
         };
+      });
+
+      queryClient.setQueryData<Review>(['review', review._id], (old) => {
+        if (!old) return old;
+        return { ...old, isFollowing: false };
       });
 
       return { previousData };
@@ -139,12 +167,12 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
     onMutate: async () => {
       await queryClient.cancelQueries({
         predicate: (query) =>
-          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews' || query.queryKey[0] === 'review'
       });
 
       const previousData = queryClient.getQueriesData({
         predicate: (query) =>
-          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews' || query.queryKey[0] === 'review'
       });
 
       queryClient.setQueriesData<InfiniteReviewsData>({
@@ -164,6 +192,11 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
         };
       });
 
+      queryClient.setQueryData<Review>(['review', review._id], (old) => {
+        if (!old) return old;
+        return { ...old, isLiked: true, likes: old.likes + 1 };
+      });
+
       return { previousData };
     },
     onError: (err, _variables, context) => {
@@ -181,12 +214,12 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
     onMutate: async () => {
       await queryClient.cancelQueries({
         predicate: (query) =>
-          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews' || query.queryKey[0] === 'review'
       });
 
       const previousData = queryClient.getQueriesData({
         predicate: (query) =>
-          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews'
+          query.queryKey[0] === 'reviews' || query.queryKey[0] === 'following-reviews' || query.queryKey[0] === 'review'
       });
 
       queryClient.setQueriesData<InfiniteReviewsData>({
@@ -204,6 +237,11 @@ const ReviewCard = ({ review }: ReviewCardProps) => {
             ),
           })),
         };
+      });
+
+      queryClient.setQueryData<Review>(['review', review._id], (old) => {
+        if (!old) return old;
+        return { ...old, isLiked: false, likes: old.likes - 1 };
       });
 
       return { previousData };

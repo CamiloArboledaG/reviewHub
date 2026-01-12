@@ -48,6 +48,14 @@ export const getReviewComments = async (req, res) => {
         select: 'name username _id',
         populate: { path: 'avatar', select: 'imageUrl name' }
       })
+      .populate({
+        path: 'replies',
+        populate: {
+          path: 'user',
+          select: 'name username _id',
+          populate: { path: 'avatar', select: 'imageUrl name' }
+        }
+      })
       .lean();
 
     const followingSet = req.user
@@ -61,6 +69,11 @@ export const getReviewComments = async (req, res) => {
       isLiked: currentUserId ? comment.likes.some(likeId => likeId.toString() === currentUserId) : false,
       likes: comment.likes.length,
       repliesCount: comment.replies.length,
+      replies: comment.replies.map(reply => ({
+        ...reply,
+        isLiked: currentUserId ? reply.likes.some(likeId => likeId.toString() === currentUserId) : false,
+        likes: reply.likes.length,
+      })),
       score: sort === 'top' ? calculateCommentScore(comment, {
         reviewAuthorId: review.user.toString(),
         followingSet
@@ -97,7 +110,7 @@ export const getReviewComments = async (req, res) => {
 export const createComment = async (req, res) => {
   try {
     const { reviewId } = req.params;
-    const { content } = req.body;
+    const { content, parentCommentId } = req.body;
 
     if (!content || content.trim().length === 0) {
       return res.status(400).json({ message: 'El contenido del comentario es requerido' });
@@ -112,15 +125,32 @@ export const createComment = async (req, res) => {
       return res.status(404).json({ message: 'Review no encontrado' });
     }
 
+    if (parentCommentId) {
+      const parentComment = await Comment.findById(parentCommentId);
+      if (!parentComment) {
+        return res.status(404).json({ message: 'Comentario padre no encontrado' });
+      }
+
+      if (parentComment.parentComment) {
+        return res.status(400).json({ message: 'No puedes responder a una respuesta. Solo se permite un nivel de anidación.' });
+      }
+    }
+
     const comment = await Comment.create({
       user: req.user._id,
       review: reviewId,
       content: content.trim(),
-      parentComment: null,
+      parentComment: parentCommentId || null,
     });
 
-    review.comments.push(comment._id);
-    await review.save();
+    if (parentCommentId) {
+      await Comment.findByIdAndUpdate(parentCommentId, {
+        $push: { replies: comment._id }
+      });
+    } else {
+      review.comments.push(comment._id);
+      await review.save();
+    }
 
     const populatedComment = await Comment.findById(comment._id)
       .populate({

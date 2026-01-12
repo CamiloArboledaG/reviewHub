@@ -88,6 +88,7 @@ export type Comment = {
   parentComment: string | null;
   likes: number;
   repliesCount: number;
+  replies: Comment[];
   isLiked?: boolean;
   createdAt: string;
   updatedAt: string;

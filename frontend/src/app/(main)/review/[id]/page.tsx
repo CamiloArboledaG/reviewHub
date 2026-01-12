@@ -111,10 +111,6 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
 
           <ReviewCard review={reviewForCard} />
 
-          <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
-            <h2 className="text-xl font-bold mb-4">Comentarios</h2>
-          </div>
-
           <CommentList reviewId={id} reviewAuthorId={review.user._id} />
         </div>
       </div>

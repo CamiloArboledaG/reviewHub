@@ -4,8 +4,9 @@ import { MoreHorizontal, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Comment, InfiniteCommentsData, Review } from '@/lib/definitions';
-import { deleteComment, likeComment, unlikeComment } from '@/lib/queries';
+import { deleteComment, likeComment, unlikeComment, createReply } from '@/lib/queries';
 import { Button } from './ui/button';
+import { CustomInput } from './ui/custom-input';
 import { Card, CardContent } from './ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Badge } from './ui/badge';
@@ -18,6 +19,7 @@ import {
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatTimeAgo } from '@/lib/utils';
+import CommentReply from './CommentReply';
 import ActionButtons from './ActionButtons';
 
 type CommentCardProps = {
@@ -30,6 +32,8 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
   const { showToast } = useToast();
   const { user: currentUser } = useAuth();
   const [avatarError, setAvatarError] = useState(false);
+  const [isReplying, setIsReplying] = useState(false);
+  const [replyContent, setReplyContent] = useState('');
 
   const isAuthor = currentUser?._id === comment.user._id;
   const isReviewAuthor = comment.user._id === reviewAuthorId;
@@ -158,6 +162,42 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
     },
   });
 
+  const replyMutation = useMutation({
+    mutationFn: (content: string) => createReply({ reviewId: comment.review, content, parentCommentId: comment._id }),
+    onSuccess: (newReply) => {
+      setReplyContent('');
+      setIsReplying(false);
+
+      queryClient.setQueriesData<InfiniteCommentsData>({
+        predicate: (query) => query.queryKey[0] === 'comments'
+      }, (old) => {
+        if (!old) return old;
+
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            comments: page.comments.map((c) =>
+              c._id === comment._id
+                ? { ...c, replies: [...c.replies, newReply], repliesCount: c.repliesCount + 1 }
+                : c
+            ),
+          })),
+        };
+      });
+
+      queryClient.setQueryData<Review>(['review', comment.review], (old) => {
+        if (!old) return old;
+        return { ...old, comments: old.comments + 1 };
+      });
+
+      showToast('Respuesta publicada exitosamente', 'success');
+    },
+    onError: (err) => {
+      showToast(err.message || 'Error al publicar la respuesta', 'error');
+    },
+  });
+
   const handleLike = () => {
     if (comment.isLiked === true) {
       unlikeMutation.mutate();
@@ -170,6 +210,27 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
       deleteMutation.mutate();
     }
+  };
+
+  const handleReply = () => {
+    setIsReplying(!isReplying);
+    setReplyContent('');
+  };
+
+  const handleSubmitReply = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!replyContent.trim()) {
+      showToast('La respuesta no puede estar vacía', 'error');
+      return;
+    }
+
+    if (replyContent.length > 500) {
+      showToast('La respuesta no puede exceder 500 caracteres', 'error');
+      return;
+    }
+
+    replyMutation.mutate(replyContent);
   };
 
   return (
@@ -192,54 +253,111 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
             </Avatar>
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-sm">{comment.user.name}</span>
-                  <span className="text-muted-foreground text-sm">@{comment.user.username}</span>
-                  {isReviewAuthor && (
-                    <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-2 py-0.5">
-                      Autor
-                    </Badge>
-                  )}
-                  <span className="text-muted-foreground text-sm">·</span>
-                  <span className="text-muted-foreground text-sm">{formatTimeAgo(comment.createdAt)}</span>
-                </div>
-
-                {isAuthor && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950 cursor-pointer"
-                        onClick={handleDelete}
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {deleteMutation.isPending ? 'Eliminando...' : 'Eliminar comentario'}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-sm">{comment.user.name}</span>
+                <span className="text-muted-foreground text-sm">@{comment.user.username}</span>
+                {isReviewAuthor && (
+                  <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-2 py-0.5">
+                    Autor
+                  </Badge>
                 )}
+                <span className="text-muted-foreground text-sm">·</span>
+                <span className="text-muted-foreground text-sm">{formatTimeAgo(comment.createdAt)}</span>
               </div>
 
-              <p className="mt-2 text-sm text-foreground whitespace-pre-wrap break-words">
-                {comment.content}
-              </p>
+              {isAuthor && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950 cursor-pointer"
+                      onClick={handleDelete}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {deleteMutation.isPending ? 'Eliminando...' : 'Eliminar comentario'}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+
+            <p className="mt-2 text-sm text-foreground whitespace-pre-wrap break-words">
+              {comment.content}
+            </p>
+
+            <div className='pt-4'>
+            <ActionButtons
+              likes={comment.likes}
+              isLiked={comment.isLiked}
+              onLike={handleLike}
+              comments={comment.repliesCount}
+              onComment={handleReply}
+              likePending={likeMutation.isPending || unlikeMutation.isPending}
+              compact
+              size="sm"
+              likeButtonClassName="px-0"
+              commentButtonClassName="px-2"
+            />
+            </div>
             </div>
           </div>
         </div>
 
-        <ActionButtons
-          likes={comment.likes}
-          isLiked={comment.isLiked}
-          onLike={handleLike}
-          commentText="Responder"
-          likePending={likeMutation.isPending || unlikeMutation.isPending}
-        />
+        {isReplying && (
+          <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 px-4 py-4">
+            <form onSubmit={handleSubmitReply} className="space-y-3 pl-12">
+              <CustomInput
+                asTextarea
+                variant="sm"
+                rows={3}
+                placeholder="Escribe tu respuesta..."
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                focusRing="focus:ring-2 focus:ring-purple-500/20"
+                focusBorder="focus:border-purple-500"
+                disabled={replyMutation.isPending}
+                className="resize-none"
+              />
+              <div className="flex items-center justify-between">
+                <span className={`text-xs ${replyContent.length > 500 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                  {500 - replyContent.length} caracteres restantes
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsReplying(false)}
+                    disabled={replyMutation.isPending}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={replyMutation.isPending || !replyContent.trim() || replyContent.length > 500}
+                  >
+                    {replyMutation.isPending ? 'Respondiendo...' : 'Responder'}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
+            {comment.replies.map((reply) => (
+              <CommentReply key={reply._id} reply={reply} parentCommentId={comment._id} />
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

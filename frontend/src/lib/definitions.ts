@@ -89,6 +89,7 @@ export type Comment = {
   likes: number;
   repliesCount: number;
   replies: Comment[];
+  hasMoreReplies?: boolean;
   isLiked?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -99,6 +100,14 @@ export type CommentsPage = {
   currentPage: number;
   totalPages: number;
   totalComments: number;
+  hasNextPage: boolean;
+};
+
+export type RepliesPage = {
+  replies: Comment[];
+  currentPage: number;
+  totalPages: number;
+  totalReplies: number;
   hasNextPage: boolean;
 };
 

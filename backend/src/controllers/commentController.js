@@ -1,30 +1,14 @@
 import mongoose from 'mongoose';
+import {
+  calculateCommentBaseScore,
+  calculateCommentFinalScore,
+} from '../utils/scoreCalculator.js';
+
 const Comment = mongoose.model('Comment');
 const Review = mongoose.model('Review');
 const User = mongoose.model('User');
 
-const calculateCommentScore = (comment, context) => {
-  const now = new Date();
-  const commentDate = new Date(comment.createdAt);
-  const hoursSincePost = (now - commentDate) / (1000 * 60 * 60);
-
-  const recencyScore = Math.exp(-hoursSincePost / 24);
-
-  const likesScore = comment.likes.length * 2;
-  const repliesScore = comment.replies.length * 3;
-  const engagementScore = likesScore + repliesScore;
-
-  const isReviewAuthor = comment.user._id.toString() === context.reviewAuthorId;
-  const authorBoost = isReviewAuthor ? 2.0 : 1.0;
-
-  const isFollowing = context.followingSet.has(comment.user._id.toString());
-  const followingBoost = isFollowing ? 1.3 : 1.0;
-
-  const baseScore = (recencyScore * 5) + (engagementScore * 0.8);
-  const finalScore = baseScore * authorBoost * followingBoost;
-
-  return finalScore;
-};
+const REPLIES_PREVIEW_LIMIT = 2;
 
 export const getReviewComments = async (req, res) => {
   const { reviewId } = req.params;
@@ -39,63 +23,70 @@ export const getReviewComments = async (req, res) => {
       return res.status(404).json({ message: 'Review no encontrado' });
     }
 
-    let comments = await Comment.find({
-      review: reviewId,
-      parentComment: null
-    })
+    const baseQuery = { review: reviewId, parentComment: null };
+
+    const totalComments = await Comment.countDocuments(baseQuery);
+
+    let sortOption = {};
+    if (sort === 'top') {
+      sortOption = { baseScore: -1, createdAt: -1 };
+    } else if (sort === 'recent') {
+      sortOption = { createdAt: -1 };
+    } else if (sort === 'oldest') {
+      sortOption = { createdAt: 1 };
+    }
+
+    let comments = await Comment.find(baseQuery)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
       .populate({
         path: 'user',
         select: 'name username _id',
         populate: { path: 'avatar', select: 'imageUrl name' }
       })
-      .populate({
-        path: 'replies',
-        populate: {
-          path: 'user',
-          select: 'name username _id',
-          populate: { path: 'avatar', select: 'imageUrl name' }
-        }
-      })
       .lean();
-
-    const followingSet = req.user
-      ? new Set((await User.findById(req.user._id).select('following').lean())?.following.map(id => id.toString()) || [])
-      : new Set();
 
     const currentUserId = req.user?._id?.toString();
 
-    comments = comments.map(comment => ({
-      ...comment,
-      isLiked: currentUserId ? comment.likes.some(likeId => likeId.toString() === currentUserId) : false,
-      likes: comment.likes.length,
-      repliesCount: comment.replies.length,
-      replies: comment.replies.map(reply => ({
-        ...reply,
-        isLiked: currentUserId ? reply.likes.some(likeId => likeId.toString() === currentUserId) : false,
-        likes: reply.likes.length,
-      })),
-      score: sort === 'top' ? calculateCommentScore(comment, {
-        reviewAuthorId: review.user.toString(),
-        followingSet
-      }) : 0
-    }));
+    const commentsWithReplies = await Promise.all(
+      comments.map(async (comment) => {
+        const repliesPreview = await Comment.find({ parentComment: comment._id })
+          .sort({ createdAt: 1 })
+          .limit(REPLIES_PREVIEW_LIMIT)
+          .populate({
+            path: 'user',
+            select: 'name username _id',
+            populate: { path: 'avatar', select: 'imageUrl name' }
+          })
+          .lean();
 
-    if (sort === 'top') {
-      comments.sort((a, b) => b.score - a.score);
-    } else if (sort === 'recent') {
-      comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    } else if (sort === 'oldest') {
-      comments.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-    }
+        const totalReplies = comment.repliesCount ?? comment.replies?.length ?? 0;
+        const hasMoreReplies = totalReplies > REPLIES_PREVIEW_LIMIT;
 
-    const totalComments = comments.length;
-    const paginatedComments = comments.slice(skip, skip + limit);
+        return {
+          ...comment,
+          isLiked: currentUserId ? comment.likes.some(likeId => likeId.toString() === currentUserId) : false,
+          likes: comment.likesCount ?? comment.likes.length,
+          repliesCount: totalReplies,
+          hasMoreReplies,
+          replies: repliesPreview.map(reply => ({
+            ...reply,
+            isLiked: currentUserId ? reply.likes.some(likeId => likeId.toString() === currentUserId) : false,
+            likes: reply.likesCount ?? reply.likes.length,
+          })),
+        };
+      })
+    );
 
     const totalPages = Math.ceil(totalComments / limit);
     const hasNextPage = page < totalPages;
 
     res.json({
-      comments: paginatedComments.map(({ score, ...comment }) => comment),
+      comments: commentsWithReplies.map(({ baseScore, ...comment }) => ({
+        ...comment,
+        replies: comment.replies.map(({ baseScore: _, ...reply }) => reply),
+      })),
       currentPage: page,
       totalPages,
       totalComments,
@@ -104,6 +95,55 @@ export const getReviewComments = async (req, res) => {
   } catch (error) {
     console.error('Error fetching comments:', error);
     res.status(500).json({ message: 'Error al obtener comentarios', error: error.message });
+  }
+};
+
+export const getCommentReplies = async (req, res) => {
+  const { commentId } = req.params;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const skip = (page - 1) * limit;
+
+  try {
+    const parentComment = await Comment.findById(commentId);
+    if (!parentComment) {
+      return res.status(404).json({ message: 'Comentario no encontrado' });
+    }
+
+    const totalReplies = await Comment.countDocuments({ parentComment: commentId });
+
+    const replies = await Comment.find({ parentComment: commentId })
+      .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: 'user',
+        select: 'name username _id',
+        populate: { path: 'avatar', select: 'imageUrl name' }
+      })
+      .lean();
+
+    const currentUserId = req.user?._id?.toString();
+
+    const formattedReplies = replies.map(reply => ({
+      ...reply,
+      isLiked: currentUserId ? reply.likes.some(likeId => likeId.toString() === currentUserId) : false,
+      likes: reply.likesCount ?? reply.likes.length,
+    }));
+
+    const totalPages = Math.ceil(totalReplies / limit);
+    const hasNextPage = page < totalPages;
+
+    res.json({
+      replies: formattedReplies.map(({ baseScore, ...reply }) => reply),
+      currentPage: page,
+      totalPages,
+      totalReplies,
+      hasNextPage,
+    });
+  } catch (error) {
+    console.error('Error fetching replies:', error);
+    res.status(500).json({ message: 'Error al obtener respuestas', error: error.message });
   }
 };
 
@@ -136,19 +176,29 @@ export const createComment = async (req, res) => {
       }
     }
 
-    const comment = await Comment.create({
+    const commentData = {
       user: req.user._id,
       review: reviewId,
       content: content.trim(),
       parentComment: parentCommentId || null,
-    });
+      likesCount: 0,
+      repliesCount: 0,
+    };
+
+    const reviewAuthorId = parentCommentId ? null : review.user.toString();
+    commentData.baseScore = calculateCommentBaseScore({ ...commentData, createdAt: new Date() }, reviewAuthorId);
+
+    const comment = await Comment.create(commentData);
 
     if (parentCommentId) {
-      await Comment.findByIdAndUpdate(parentCommentId, {
-        $push: { replies: comment._id }
-      });
+      const parentComment = await Comment.findById(parentCommentId);
+      parentComment.replies.push(comment._id);
+      parentComment.repliesCount = parentComment.replies.length;
+      parentComment.baseScore = calculateCommentBaseScore(parentComment, review.user.toString());
+      await parentComment.save();
     } else {
       review.comments.push(comment._id);
+      review.commentsCount = review.comments.length;
       await review.save();
     }
 
@@ -182,6 +232,7 @@ export const deleteComment = async (req, res) => {
     const review = await Review.findById(comment.review);
     if (review) {
       review.comments = review.comments.filter(commentId => commentId.toString() !== id);
+      review.commentsCount = review.comments.length;
       await review.save();
     }
 
@@ -189,6 +240,8 @@ export const deleteComment = async (req, res) => {
       const parentComment = await Comment.findById(comment.parentComment);
       if (parentComment) {
         parentComment.replies = parentComment.replies.filter(replyId => replyId.toString() !== id);
+        parentComment.repliesCount = parentComment.replies.length;
+        parentComment.baseScore = calculateCommentBaseScore(parentComment, review?.user?.toString());
         await parentComment.save();
       }
     }
@@ -218,10 +271,15 @@ export const likeComment = async (req, res) => {
       return res.status(400).json({ message: 'Ya has dado me gusta a este comentario' });
     }
 
+    const review = await Review.findById(comment.review).select('user');
+    const reviewAuthorId = review?.user?.toString();
+
     comment.likes.push(userId);
+    comment.likesCount = comment.likes.length;
+    comment.baseScore = calculateCommentBaseScore(comment, reviewAuthorId);
     await comment.save();
 
-    res.json({ message: 'Me gusta agregado exitosamente', likesCount: comment.likes.length });
+    res.json({ message: 'Me gusta agregado exitosamente', likesCount: comment.likesCount });
   } catch (error) {
     console.error('Error liking comment:', error);
     res.status(500).json({ message: 'Error al dar me gusta', error: error.message });
@@ -242,10 +300,15 @@ export const unlikeComment = async (req, res) => {
       return res.status(400).json({ message: 'No has dado me gusta a este comentario' });
     }
 
+    const review = await Review.findById(comment.review).select('user');
+    const reviewAuthorId = review?.user?.toString();
+
     comment.likes = comment.likes.filter(likeId => likeId.toString() !== userId.toString());
+    comment.likesCount = comment.likes.length;
+    comment.baseScore = calculateCommentBaseScore(comment, reviewAuthorId);
     await comment.save();
 
-    res.json({ message: 'Me gusta eliminado exitosamente', likesCount: comment.likes.length });
+    res.json({ message: 'Me gusta eliminado exitosamente', likesCount: comment.likesCount });
   } catch (error) {
     console.error('Error unliking comment:', error);
     res.status(500).json({ message: 'Error al quitar me gusta', error: error.message });

@@ -1,4 +1,10 @@
 import mongoose from 'mongoose';
+import {
+  calculateReviewBaseScore,
+  calculateReviewFinalScore,
+  updateReviewScore
+} from '../utils/scoreCalculator.js';
+
 const Review = mongoose.model('Review');
 const Category = mongoose.model('Category');
 const Item = mongoose.model('Item');
@@ -36,15 +42,21 @@ export const createReview = async (req, res) => {
       });
     }
 
-    const review = await Review.create({
+    const reviewData = {
       user: req.user._id,
       item: itemId,
       rating: {
         value: rating,
         max: 5
       },
-      content: content.trim()
-    });
+      content: content.trim(),
+      likesCount: 0,
+      commentsCount: 0,
+    };
+
+    reviewData.baseScore = calculateReviewBaseScore({ ...reviewData, createdAt: new Date() });
+
+    const review = await Review.create(reviewData);
 
     const populatedReview = await Review.findById(review._id)
       .populate({
@@ -67,29 +79,6 @@ export const createReview = async (req, res) => {
   }
 };
 
-const calculateReviewScore = (review, followingSet = new Set()) => {
-  const now = new Date();
-  const reviewDate = new Date(review.createdAt);
-  const hoursSincePost = (now - reviewDate) / (1000 * 60 * 60);
-
-  const recencyScore = Math.exp(-hoursSincePost / 72);
-
-  const engagementScore = (review.likes.length * 2) + (review.comments.length * 3);
-
-  const ratingValue = review.rating?.value || 0;
-  let ratingInterest = 1;
-  if (ratingValue >= 4.5 || ratingValue <= 2) {
-    ratingInterest = 1.5;
-  } else if (ratingValue >= 4 || ratingValue <= 2.5) {
-    ratingInterest = 1.2;
-  }
-
-  const followingBoost = followingSet.has(review.user._id?.toString()) ? 1.3 : 1;
-
-  const score = (recencyScore * 10) + (engagementScore * 0.5) + ratingInterest;
-  return score * followingBoost;
-};
-
 export const getReviews = async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
@@ -99,9 +88,19 @@ export const getReviews = async (req, res) => {
 
   try {
     let query = {};
+    let currentUser = null;
+    let followingSet = new Set();
+    let likedReviewIds = new Set();
+
+    if (req.user) {
+      currentUser = await User.findById(req.user._id).select('following').lean();
+      followingSet = new Set(currentUser?.following?.map(id => id.toString()) || []);
+
+      const userLikedReviews = await Review.find({ likes: req.user._id }).select('_id').lean();
+      likedReviewIds = new Set(userLikedReviews.map(r => r._id.toString()));
+    }
 
     if (followingOnly && req.user) {
-      const currentUser = await User.findById(req.user._id).select('following').lean();
       if (!currentUser || currentUser.following.length === 0) {
         return res.json({
           reviews: [],
@@ -125,7 +124,6 @@ export const getReviews = async (req, res) => {
           const categoryIds = categories.map(cat => cat._id);
           const itemsInCategory = await Item.find({ category: { $in: categoryIds } }).select('_id');
           const itemIds = itemsInCategory.map(item => item._id);
-
           query.item = { $in: itemIds };
         } else {
           return res.json({
@@ -139,7 +137,18 @@ export const getReviews = async (req, res) => {
       }
     }
 
+    if (req.user && likedReviewIds.size > 0) {
+      query._id = { $nin: Array.from(likedReviewIds) };
+    }
+
+    const fetchLimit = Math.max(limit * 3, 30);
+
+    const totalReviews = await Review.countDocuments(query);
+
     let reviews = await Review.find(query)
+      .sort({ baseScore: -1, createdAt: -1 })
+      .skip(Math.max(0, skip - limit))
+      .limit(fetchLimit + limit)
       .populate({
         path: 'user',
         select: 'name username _id',
@@ -154,31 +163,34 @@ export const getReviews = async (req, res) => {
       })
       .lean();
 
-    const followingSet = req.user
-      ? new Set((await User.findById(req.user._id).select('following').lean())?.following.map(id => id.toString()) || [])
-      : new Set();
-
     const currentUserId = req.user?._id?.toString();
 
-    reviews = reviews.map(review => ({
-      ...review,
-      isFollowing: followingSet.has(review.user._id.toString()),
-      isLiked: currentUserId ? review.likes.some(likeId => likeId.toString() === currentUserId) : false,
-      likes: review.likes.length,
-      comments: review.comments.length,
-      score: calculateReviewScore(review, followingSet)
-    }));
+    reviews = reviews.map(review => {
+      const finalScore = calculateReviewFinalScore(review, {
+        followingSet,
+        likedByUser: false,
+      });
 
-    reviews.sort((a, b) => b.score - a.score);
+      return {
+        ...review,
+        isFollowing: followingSet.has(review.user._id.toString()),
+        isLiked: currentUserId ? review.likes.some(likeId => likeId.toString() === currentUserId) : false,
+        likes: review.likesCount ?? review.likes.length,
+        comments: review.commentsCount ?? review.comments.length,
+        finalScore,
+      };
+    });
 
-    const totalReviews = reviews.length;
-    const paginatedReviews = reviews.slice(skip, skip + limit);
+    reviews.sort((a, b) => b.finalScore - a.finalScore);
+
+    const adjustedSkip = skip > 0 ? limit : 0;
+    const paginatedReviews = reviews.slice(adjustedSkip, adjustedSkip + limit);
 
     const totalPages = Math.ceil(totalReviews / limit);
     const hasNextPage = page < totalPages;
 
     res.json({
-      reviews: paginatedReviews.map(({ score, ...review }) => review),
+      reviews: paginatedReviews.map(({ finalScore, baseScore, lastScoreUpdate, ...review }) => review),
       currentPage: page,
       totalPages,
       totalReviews,
@@ -205,9 +217,12 @@ export const likeReview = async (req, res) => {
     }
 
     review.likes.push(userId);
+    review.likesCount = review.likes.length;
+    review.baseScore = calculateReviewBaseScore(review);
+    review.lastScoreUpdate = new Date();
     await review.save();
 
-    res.json({ message: 'Me gusta agregado exitosamente', likesCount: review.likes.length });
+    res.json({ message: 'Me gusta agregado exitosamente', likesCount: review.likesCount });
   } catch (error) {
     console.error('Error liking review:', error);
     res.status(500).json({ message: 'Error al dar me gusta', error: error.message });
@@ -229,9 +244,12 @@ export const unlikeReview = async (req, res) => {
     }
 
     review.likes = review.likes.filter(likeId => likeId.toString() !== userId.toString());
+    review.likesCount = review.likes.length;
+    review.baseScore = calculateReviewBaseScore(review);
+    review.lastScoreUpdate = new Date();
     await review.save();
 
-    res.json({ message: 'Me gusta eliminado exitosamente', likesCount: review.likes.length });
+    res.json({ message: 'Me gusta eliminado exitosamente', likesCount: review.likesCount });
   } catch (error) {
     console.error('Error unliking review:', error);
     res.status(500).json({ message: 'Error al quitar me gusta', error: error.message });

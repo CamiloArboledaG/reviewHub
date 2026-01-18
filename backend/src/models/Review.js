@@ -37,7 +37,26 @@ const reviewSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Comment',
   }],
+  likesCount: {
+    type: Number,
+    default: 0,
+  },
+  commentsCount: {
+    type: Number,
+    default: 0,
+  },
+  baseScore: {
+    type: Number,
+    default: 0,
+    index: true,
+  },
+  lastScoreUpdate: {
+    type: Date,
+    default: Date.now,
+  },
 }, { timestamps: true });
+
+reviewSchema.index({ baseScore: -1, createdAt: -1 });
 
 const Review = mongoose.model('Review', reviewSchema);
 

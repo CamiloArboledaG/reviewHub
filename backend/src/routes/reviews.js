@@ -1,6 +1,6 @@
 import express from 'express';
 import { createReview, getReviews, likeReview, unlikeReview, getReviewById } from '../controllers/reviewController.js';
-import { getReviewComments, createComment, deleteComment, likeComment, unlikeComment } from '../controllers/commentController.js';
+import { getReviewComments, getCommentReplies, createComment, deleteComment, likeComment, unlikeComment } from '../controllers/commentController.js';
 import { protect, loadUser } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -91,6 +91,8 @@ router.get('/:reviewId/comments', loadUser, getReviewComments);
 router.post('/:reviewId/comments', protect, createComment);
 
 router.delete('/comments/:id', protect, deleteComment);
+
+router.get('/comments/:commentId/replies', loadUser, getCommentReplies);
 
 router.post('/comments/:id/like', protect, likeComment);
 

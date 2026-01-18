@@ -1,10 +1,10 @@
 'use client';
 
-import { MoreHorizontal, Trash2 } from 'lucide-react';
-import React, { useState } from 'react';
+import { ChevronDown, MoreHorizontal, Trash2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Comment, InfiniteCommentsData, Review } from '@/lib/definitions';
-import { deleteComment, likeComment, unlikeComment, createReply } from '@/lib/queries';
+import { Comment, InfiniteCommentsData, Review, RepliesPage } from '@/lib/definitions';
+import { deleteComment, likeComment, unlikeComment, createReply, fetchReplies } from '@/lib/queries';
 import { Button } from './ui/button';
 import { CustomInput } from './ui/custom-input';
 import { Card, CardContent } from './ui/card';
@@ -32,11 +32,19 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
   const { showToast } = useToast();
   const { user: currentUser } = useAuth();
   const [avatarError, setAvatarError] = useState(false);
-  const [isReplying, setIsReplying] = useState(false);
   const [replyContent, setReplyContent] = useState('');
+  const [isReplyExpanded, setIsReplyExpanded] = useState(false);
+  const [loadedReplies, setLoadedReplies] = useState<Comment[]>([]);
+  const [repliesPage, setRepliesPage] = useState(1);
+  const [isLoadingReplies, setIsLoadingReplies] = useState(false);
+  const replyInputRef = useRef<HTMLTextAreaElement>(null);
+  const replySectionRef = useRef<HTMLDivElement>(null);
 
   const isAuthor = currentUser?._id === comment.user._id;
   const isReviewAuthor = comment.user._id === reviewAuthorId;
+
+  const allReplies = [...comment.replies, ...loadedReplies];
+  const remainingRepliesCount = comment.repliesCount - allReplies.length;
 
   const likeMutation = useMutation({
     mutationFn: () => likeComment(comment._id),
@@ -166,7 +174,9 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
     mutationFn: (content: string) => createReply({ reviewId: comment.review, content, parentCommentId: comment._id }),
     onSuccess: (newReply) => {
       setReplyContent('');
-      setIsReplying(false);
+      setIsReplyExpanded(false);
+
+      setLoadedReplies(prev => [...prev, newReply]);
 
       queryClient.setQueriesData<InfiniteCommentsData>({
         predicate: (query) => query.queryKey[0] === 'comments'
@@ -179,7 +189,7 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
             ...page,
             comments: page.comments.map((c) =>
               c._id === comment._id
-                ? { ...c, replies: [...c.replies, newReply], repliesCount: c.repliesCount + 1 }
+                ? { ...c, repliesCount: c.repliesCount + 1 }
                 : c
             ),
           })),
@@ -213,8 +223,11 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
   };
 
   const handleReply = () => {
-    setIsReplying(!isReplying);
-    setReplyContent('');
+    setIsReplyExpanded(true);
+    setTimeout(() => {
+      replySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      replyInputRef.current?.focus();
+    }, 100);
   };
 
   const handleSubmitReply = (e: React.FormEvent) => {
@@ -231,6 +244,29 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
     }
 
     replyMutation.mutate(replyContent);
+  };
+
+  const handleLoadMoreReplies = async () => {
+    if (isLoadingReplies) return;
+
+    setIsLoadingReplies(true);
+    try {
+      const data: RepliesPage = await fetchReplies({
+        commentId: comment._id,
+        pageParam: repliesPage,
+        limit: 10,
+      });
+
+      const existingIds = new Set(allReplies.map(r => r._id));
+      const uniqueNewReplies = data.replies.filter(r => !existingIds.has(r._id));
+
+      setLoadedReplies(prev => [...prev, ...uniqueNewReplies]);
+      setRepliesPage(prev => prev + 1);
+    } catch {
+      showToast('Error al cargar más respuestas', 'error');
+    } finally {
+      setIsLoadingReplies(false);
+    }
   };
 
   return (
@@ -309,53 +345,96 @@ const CommentCard = ({ comment, reviewAuthorId }: CommentCardProps) => {
           </div>
         </div>
 
-        {isReplying && (
-          <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 px-4 py-4">
-            <form onSubmit={handleSubmitReply} className="space-y-3 pl-12">
-              <CustomInput
-                asTextarea
-                variant="sm"
-                rows={3}
-                placeholder="Escribe tu respuesta..."
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                focusRing="focus:ring-2 focus:ring-purple-500/20"
-                focusBorder="focus:border-purple-500"
-                disabled={replyMutation.isPending}
-                className="resize-none"
-              />
-              <div className="flex items-center justify-between">
-                <span className={`text-xs ${replyContent.length > 500 ? 'text-red-500' : 'text-muted-foreground'}`}>
-                  {500 - replyContent.length} caracteres restantes
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsReplying(false)}
-                    disabled={replyMutation.isPending}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={replyMutation.isPending || !replyContent.trim() || replyContent.length > 500}
-                  >
-                    {replyMutation.isPending ? 'Respondiendo...' : 'Responder'}
-                  </Button>
-                </div>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {comment.replies && comment.replies.length > 0 && (
+        {(allReplies.length > 0 || isReplyExpanded) && (
           <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
-            {comment.replies.map((reply) => (
+            {allReplies.map((reply) => (
               <CommentReply key={reply._id} reply={reply} parentCommentId={comment._id} />
             ))}
+
+            {remainingRepliesCount > 0 && (
+              <div className="py-2 px-4 pl-14">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLoadMoreReplies}
+                  disabled={isLoadingReplies}
+                  className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-950/50 p-0 h-auto font-medium"
+                >
+                  <ChevronDown className="h-4 w-4 mr-1" />
+                  {isLoadingReplies
+                    ? 'Cargando...'
+                    : `Ver ${remainingRepliesCount} ${remainingRepliesCount === 1 ? 'respuesta' : 'respuestas'} más`
+                  }
+                </Button>
+              </div>
+            )}
+
+            <div ref={replySectionRef} className="py-3 px-4 pl-14">
+              {isReplyExpanded ? (
+                <form onSubmit={handleSubmitReply} className="space-y-3">
+                  <CustomInput
+                    ref={replyInputRef}
+                    asTextarea
+                    variant="sm"
+                    rows={3}
+                    placeholder="Escribe tu respuesta..."
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    focusRing="focus:ring-2 focus:ring-purple-500/20"
+                    focusBorder="focus:border-purple-500"
+                    disabled={replyMutation.isPending}
+                    className="resize-none"
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs ${replyContent.length > 500 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                      {500 - replyContent.length} caracteres restantes
+                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setIsReplyExpanded(false);
+                          setReplyContent('');
+                        }}
+                        disabled={replyMutation.isPending}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="submit"
+                        size="sm"
+                        disabled={replyMutation.isPending || !replyContent.trim() || replyContent.length > 500}
+                      >
+                        {replyMutation.isPending ? 'Respondiendo...' : 'Responder'}
+                      </Button>
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                <div
+                  onClick={() => {
+                    setIsReplyExpanded(true);
+                    setTimeout(() => replyInputRef.current?.focus(), 50);
+                  }}
+                  className="flex items-center gap-3 cursor-pointer group"
+                >
+                  <Avatar className="w-8 h-8 flex-shrink-0">
+                    {currentUser?.avatar?.imageUrl ? (
+                      <AvatarImage src={currentUser.avatar.imageUrl} alt={currentUser.name} />
+                    ) : (
+                      <AvatarFallback className="bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 text-xs">
+                        {currentUser?.name?.charAt(0) || '?'}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="flex-1 py-2 px-3 rounded-full border border-gray-200 dark:border-gray-700 text-sm text-muted-foreground group-hover:border-purple-400 dark:group-hover:border-purple-500 transition-colors">
+                    Escribe una respuesta...
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </CardContent>

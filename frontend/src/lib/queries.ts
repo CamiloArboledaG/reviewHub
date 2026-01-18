@@ -295,6 +295,17 @@ export const fetchComments = async ({ reviewId, pageParam = 1, sort = 'top' }: {
   return res.json();
 };
 
+export const fetchReplies = async ({ commentId, pageParam = 1, limit = 10 }: { commentId: string, pageParam?: number, limit?: number }) => {
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/reviews/comments/${commentId}/replies?page=${pageParam}&limit=${limit}`;
+  const res = await fetch(url, { credentials: 'include' });
+
+  if (!res.ok) {
+    throw new Error('Error al obtener las respuestas');
+  }
+
+  return res.json();
+};
+
 export const createComment = async ({ reviewId, content }: { reviewId: string, content: string }) => {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewId}/comments`, {
     method: 'POST',

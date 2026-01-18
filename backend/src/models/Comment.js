@@ -30,7 +30,22 @@ const commentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Comment',
   }],
+  likesCount: {
+    type: Number,
+    default: 0,
+  },
+  repliesCount: {
+    type: Number,
+    default: 0,
+  },
+  baseScore: {
+    type: Number,
+    default: 0,
+    index: true,
+  },
 }, { timestamps: true });
+
+commentSchema.index({ review: 1, parentComment: 1, baseScore: -1 });
 
 const Comment = mongoose.model('Comment', commentSchema);
 
